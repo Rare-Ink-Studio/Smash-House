@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Smash House</title>
+
+<style>
+body{margin:0;overflow:hidden;background:#111;font-family:Arial,sans-serif;color:white;text-align:center}
+h1{margin:12px 0 4px;font-size:46px;letter-spacing:3px;text-shadow:0 0 15px rgba(255,255,255,.3)}
+.subtitle{color:#ffd166;margin-bottom:6px;font-size:18px}
+.prototype{font-size:13px;color:#999;margin-bottom:8px}
+.stats{display:flex;justify-content:center;gap:22px;margin-bottom:10px;font-size:18px;flex-wrap:wrap}
+.room{position:relative;width:90vw;max-width:950px;height:56vh;margin:auto;border-radius:20px;overflow:hidden;background:linear-gradient(to bottom,#3c3c3c,#1d1d1d);border:6px solid #444;box-shadow:0 0 25px rgba(255,255,255,.08),inset 0 0 60px rgba(0,0,0,.4)}
+.floor{position:absolute;bottom:0;width:100%;height:26%;background:linear-gradient(to bottom,#2a2a2a,#181818);border-top:4px solid #555}
+.object{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);width:185px;height:185px;background:white;border-radius:24px;cursor:pointer;user-select:none;overflow:hidden;display:flex;justify-content:center;align-items:center;box-shadow:0 12px 0 #999,0 0 25px rgba(255,255,255,.15);transition:.12s}
+.object:hover{transform:translate(-50%,-50%) scale(1.03)}
+.object.stage1{background:#ffd166;transform:translate(-50%,-50%) rotate(-5deg) scale(.97)}
+.object.stage2{background:#ef476f;transform:translate(-50%,-50%) rotate(8deg) scale(.93)}
+.object.stage3{background:#111;transform:translate(-50%,-50%) rotate(-12deg) scale(.88);box-shadow:0 0 35px rgba(255,0,80,.8),0 0 80px rgba(255,0,80,.25)}
+.object-icon{font-size:82px;z-index:2;pointer-events:none}
+.object-name{position:absolute;bottom:10px;width:100%;font-size:15px;color:#111;font-weight:bold;z-index:2;pointer-events:none}
+.object.stage2 .object-name,.object.stage3 .object-name{color:white}
+.crack{position:absolute;inset:20px;display:none;font-size:85px;line-height:130px;pointer-events:none;color:rgba(255,255,255,.8);z-index:3}
+.object.stage1 .crack,.object.stage2 .crack,.object.stage3 .crack{display:block}
+.chip{position:absolute;border-radius:5px;opacity:.9;pointer-events:none;animation:chipPop .45s ease-out forwards;z-index:4}
+@keyframes chipPop{from{transform:translate(0,0) scale(.4) rotate(0deg);opacity:1}to{transform:translate(var(--x),var(--y)) scale(1.1) rotate(var(--r));opacity:.85}}
+.art{position:absolute;inset:0;display:none;pointer-events:none}
+.piece{position:absolute;border-radius:12px;opacity:.82;animation:explode .85s ease-out forwards,drift 3s ease-in-out infinite alternate}
+@keyframes explode{from{left:50%;top:50%;transform:translate(-50%,-50%) scale(.15) rotate(0deg);opacity:.2}}
+@keyframes drift{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+.message{min-height:32px;margin-top:10px;font-size:22px;font-weight:bold;color:#06d6a0;text-shadow:0 0 10px rgba(6,214,160,.35)}
+button{margin:6px;padding:12px 24px;border:none;border-radius:14px;cursor:pointer;font-size:17px;font-weight:bold;transition:.15s}
+button:hover{transform:scale(1.05)}
+.reset{background:#ffd166;color:black}.again{background:#06d6a0;color:black}.keep{background:#f15bb5;color:white;display:none}
+.sound-panel{margin-top:6px;font-size:15px;color:#ccc}
+input[type=range]{width:140px}
+.gallery-wrap{width:90vw;max-width:950px;margin:8px auto 0;padding:10px;border-radius:16px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);box-sizing:border-box}
+.gallery-title{display:flex;justify-content:space-between;align-items:center;font-size:16px;color:#ffd166;margin-bottom:8px}
+.gallery{display:flex;gap:10px;overflow-x:auto;min-height:80px;padding-bottom:4px}
+.empty-gallery{color:#aaa;font-size:14px;padding:25px 0;width:100%}
+.thumb{position:relative;min-width:90px;width:90px;height:70px;border-radius:12px;overflow:hidden;border:2px solid rgba(255,255,255,.25);background:#222;cursor:pointer;flex-shrink:0}
+.thumb-piece{position:absolute;border-radius:5px;opacity:.78}
+.modal{position:fixed;inset:0;display:none;justify-content:center;align-items:center;background:rgba(0,0,0,.82);z-index:50}
+.modal-card{width:85vw;max-width:720px;height:70vh;background:#1c1c1c;border-radius:22px;border:4px solid #444;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(255,255,255,.15)}
+.modal-art{position:absolute;inset:0;background:linear-gradient(to bottom,#333,#181818)}
+.close-modal{position:absolute;right:16px;top:14px;background:#ef476f;color:white;z-index:60}
+</style>
+</head>
+
+<body>
+
+<h1>SMASH HOUSE</h1>
+<div class="subtitle">Break it. Breathe. Build something from the pieces.</div>
+<div class="prototype">Browser Prototype v0.6</div>
+
+<div class="stats">
+<div>Score: <span id="score">0</span></div>
+<div>Stress Released: <span id="stress">0</span>%</div>
+<div>Saved Pieces: <span id="saved">0</span></div>
+<div>Object: <span id="objectLabel">TV</span></div>
+</div>
+
+<div class="room">
+<div class="floor"></div>
+
+<div class="object" id="smashObject" onclick="smashObject()">
+<div class="object-icon" id="objectIcon">📺</div>
+<div class="object-name" id="objectName">Old TV</div>
+<div class="crack">⚡</div>
+</div>
+
+<div class="art" id="art"></div>
+</div>
+
+<div class="message" id="message">Choose something safe to destroy.</div>
+
+<div class="buttons">
+<button class="keep" id="keepButton" onclick="keepThis()">Keep This</button>
+<button class="reset" onclick="resetGame()">Reset</button>
+<button class="again" onclick="newObject()">Smash Again</button>
+</div>
+
+<div class="sound-panel">
+<label><input type="checkbox" id="soundToggle" checked> Sound Enabled</label>
+&nbsp;&nbsp; Volume
+<input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.65">
+</div>
+
+<div class="gallery-wrap">
+<div class="gallery-title">
+<span>The Mission Gallery</span>
+<span>Click a saved piece to view it</span>
+</div>
+<div class="gallery" id="gallery">
+<div class="empty-gallery" id="emptyGallery">No saved pieces yet.</div>
+</div>
+</div>
+
+<div class="modal" id="modal">
+<div class="modal-card">
+<button class="close-modal" onclick="closeModal()">Close</button>
+<div class="modal-art" id="modalArt"></div>
+</div>
+</div>
+
+<script>
+let stage=0,score=0,stress=0,savedPieces=0;
+let currentArtData=[],savedGallery=[];
+let soundIndex=0;
+
+const object=document.getElementById("smashObject");
+const art=document.getElementById("art");
+const message=document.getElementById("message");
+const scoreText=document.getElementById("score");
+const stressText=document.getElementById("stress");
+const savedText=document.getElementById("saved");
+const keepButton=document.getElementById("keepButton");
+const gallery=document.getElementById("gallery");
+const emptyGallery=document.getElementById("emptyGallery");
+const modal=document.getElementById("modal");
+const modalArt=document.getElementById("modalArt");
+const objectLabel=document.getElementById("objectLabel");
+const volumeSlider=document.getElementById("volumeSlider");
+const soundToggle=document.getElementById("soundToggle");
+
+const soundStartOffset=0.23;
+
+const smashSoundPool=[
+new Audio("SmashGlass.mp3"),
+new Audio("SmashGlass.mp3"),
+new Audio("SmashGlass.mp3"),
+new Audio("SmashGlass.mp3")
+];
+
+smashSoundPool.forEach(s=>{
+s.preload="auto";
+s.load();
+});
+
+const smashObjects=[
+{name:"Old TV",icon:"📺",color:"#e5e5e5",shadow:"#999",pieces:["#ef476f","#ffd166","#06d6a0","#118ab2","#9b5de5"]},
+{name:"Phone",icon:"📱",color:"#d9f0ff",shadow:"#7aa6c2",pieces:["#118ab2","#06d6a0","#ffffff","#9b5de5","#00bbf9"]},
+{name:"Coffee Mug",icon:"☕",color:"#fff1d6",shadow:"#b58b4a",pieces:["#ffd166","#f4a261","#ffffff","#ef476f","#6d4c41"]},
+{name:"Keyboard",icon:"⌨️",color:"#f1f1f1",shadow:"#777",pieces:["#ffffff","#999999","#06d6a0","#ef476f","#118ab2"]},
+{name:"Alarm Clock",icon:"⏰",color:"#ffe066",shadow:"#c99a00",pieces:["#ffd166","#ef476f","#111111","#ffffff","#f15bb5"]},
+{name:"Mirror",icon:"🪞",color:"#dff7ff",shadow:"#91c7d9",pieces:["#dff7ff","#ffffff","#118ab2","#9b5de5","#bde0fe"]},
+{name:"Box",icon:"📦",color:"#c28b55",shadow:"#7b5431",pieces:["#c28b55","#8d5524","#ffd166","#6d4c41","#f4a261"]},
+{name:"Mystery Item",icon:"❓",color:"#c77dff",shadow:"#7b2cbf",pieces:["#9b5de5","#f15bb5","#00f5d4","#fee440","#ef476f"]}
+];
+
+let currentObject=smashObjects[0];
+
+function playSmashSound(power){
+if(!soundToggle.checked)return;
+
+const sound=smashSoundPool[soundIndex];
+soundIndex=(soundIndex+1)%smashSoundPool.length;
+
+try{
+sound.pause();
+sound.currentTime=soundStartOffset;
+sound.volume=Math.min(1,Number(volumeSlider.value)*power);
+sound.playbackRate=stage===4?0.92:1;
+sound.play();
+}catch(e){
+console.log("Sound blocked until user interaction.");
+}
+}
+
+function chooseRandomObject(){
+currentObject=smashObjects[Math.floor(Math.random()*smashObjects.length)];
+const icon=document.getElementById("objectIcon");
+const name=document.getElementById("objectName");
+
+icon.textContent=currentObject.icon;
+name.textContent=currentObject.name;
+objectLabel.textContent=currentObject.name;
+
+object.style.background=currentObject.color;
+object.style.boxShadow="0 12px 0 "+currentObject.shadow+", 0 0 25px rgba(255,255,255,0.15)";
+}
+
+function smashObject(){
+if(stage>=4)return;
+
+stage++;
+score+=10;
+stress=Math.min(100,stress+25);
+
+scoreText.textContent=score;
+stressText.textContent=stress;
+
+object.className="object stage"+stage;
+
+playSmashSound(stage===1?0.45:stage===2?0.62:stage===3?0.8:1);
+
+createDamageChips(stage);
+
+if(stage===1)message.textContent="Cracked.";
+if(stage===2)message.textContent="Breaking apart.";
+if(stage===3)message.textContent="Almost destroyed.";
+
+if(stage===4){
+message.textContent="Destroyed. Create from the pieces.";
+
+setTimeout(()=>{
+object.style.display="none";
+object.innerHTML='<div class="object-icon" id="objectIcon">📺</div><div class="object-name" id="objectName">Old TV</div><div class="crack">⚡</div>';
+createArt();
+keepButton.style.display="inline-block";
+},160);
+}
+}
+
+function createDamageChips(hitStage){
+const amount=hitStage*9;
+
+for(let i=0;i<amount;i++){
+const chip=document.createElement("div");
+chip.className="chip";
+
+const size=Math.random()*18+8;
+
+chip.style.width=size+"px";
+chip.style.height=(size*(Math.random()+0.4))+"px";
+chip.style.left=(Math.random()*80+10)+"%";
+chip.style.top=(Math.random()*80+10)+"%";
+chip.style.background=currentObject.pieces[Math.floor(Math.random()*currentObject.pieces.length)];
+chip.style.setProperty("--x",(Math.random()*110-55)+"px");
+chip.style.setProperty("--y",(Math.random()*110-55)+"px");
+chip.style.setProperty("--r",(Math.random()*360)+"deg");
+
+object.appendChild(chip);
+}
+}
+
+function createArt(){
+art.innerHTML="";
+art.style.display="block";
+currentArtData=[];
+
+for(let i=0;i<55;i++){
+const size=Math.random()*90+25;
+
+const pieceData={
+width:size,
+height:size*(Math.random()+0.35),
+left:Math.random()*78+10,
+top:Math.random()*62+7,
+color:currentObject.pieces[Math.floor(Math.random()*currentObject.pieces.length)],
+rotate:Math.random()*360,
+delay:Math.random()*0.35
+};
+
+currentArtData.push(pieceData);
+makePiece(art,pieceData,"piece");
+}
+}
+
+function makePiece(parent,data,className){
+const piece=document.createElement("div");
+piece.className=className;
+piece.style.width=data.width+"px";
+piece.style.height=data.height+"px";
+piece.style.left=data.left+"%";
+piece.style.top=data.top+"%";
+piece.style.background=data.color;
+piece.style.transform="rotate("+data.rotate+"deg)";
+piece.style.animationDelay=data.delay+"s";
+parent.appendChild(piece);
+}
+
+function keepThis(){
+if(currentArtData.length===0)return;
+
+savedPieces++;
+savedText.textContent=savedPieces;
+savedGallery.push(JSON.parse(JSON.stringify(currentArtData)));
+
+keepButton.style.display="none";
+message.textContent="Saved to The Mission Gallery.";
+renderGallery();
+}
+
+function renderGallery(){
+gallery.innerHTML="";
+
+if(savedGallery.length===0){
+gallery.appendChild(emptyGallery);
+emptyGallery.style.display="block";
+return;
+}
+
+emptyGallery.style.display="none";
+
+savedGallery.forEach((artData,index)=>{
+const thumb=document.createElement("div");
+thumb.className="thumb";
+thumb.onclick=()=>openSavedArt(index);
+
+artData.slice(0,18).forEach(data=>{
+const smallData={
+width:data.width*.22,
+height:data.height*.22,
+left:data.left,
+top:data.top,
+color:data.color,
+rotate:data.rotate,
+delay:0
+};
+makePiece(thumb,smallData,"thumb-piece");
+});
+
+gallery.appendChild(thumb);
+});
+}
+
+function openSavedArt(index){
+modalArt.innerHTML="";
+savedGallery[index].forEach(data=>makePiece(modalArt,data,"piece"));
+modal.style.display="flex";
+}
+
+function closeModal(){
+modal.style.display="none";
+modalArt.innerHTML="";
+}
+
+function newObject(){
+stage=0;
+object.className="object";
+object.style.display="flex";
+object.innerHTML='<div class="object-icon" id="objectIcon">📺</div><div class="object-name" id="objectName">Old TV</div><div class="crack">⚡</div>';
+art.style.display="none";
+art.innerHTML="";
+currentArtData=[];
+keepButton.style.display="none";
+chooseRandomObject();
+message.textContent="New object ready: "+currentObject.name;
+}
+
+function resetGame(){
+stage=0;
+score=0;
+stress=0;
+savedPieces=0;
+currentArtData=[];
+savedGallery=[];
+scoreText.textContent=score;
+stressText.textContent=stress;
+savedText.textContent=savedPieces;
+newObject();
+message.textContent="Choose something safe to destroy.";
+renderGallery();
+}
+
+chooseRandomObject();
+renderGallery();
+</script>
+
+</body>
+</html>
