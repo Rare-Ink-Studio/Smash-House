@@ -818,7 +818,7 @@ button:active{
     <div class="brand">
       <h1>SMASH HOUSE</h1>
       <div class="tagline">Break it. Breathe. Build something new.</div>
-      <div class="version">Release Prototype • Create Mode Ready</div>
+      <div class="version">Release Prototype • Root Asset Build</div>
     </div>
 
     <div class="message" id="message">Choose an item. Smash safely. Then build with the pieces.</div>
@@ -870,7 +870,7 @@ button:active{
           <button class="danger" id="resetBtn">RESET</button>
         </div>
         <p class="tip">
-          Smash objects, then drag the fragments to create your own piece of art. Works with mouse, touchscreen, phone, tablet, and GitHub Pages.
+          This build looks for PNG files in the same GitHub folder as index.html. No assets folder required.
         </p>
       </section>
 
@@ -955,7 +955,7 @@ const objects = [
     name:"Vase",
     label:"Vase",
     material:"glass",
-    stages:["assets/vase_clean.png","assets/vase_halfbroken.png","assets/vase_destroyed.png"],
+    stages:["vase_clean.png","vase_halfbroken.png","vase_destroyed.png"],
     colors:["rgba(189,224,254,.78)","rgba(255,255,255,.84)","rgba(72,202,228,.65)","#caf0f8","#90e0ef"]
   },
   {
@@ -963,7 +963,7 @@ const objects = [
     name:"Mug",
     label:"Mug",
     material:"ceramic",
-    stages:["assets/mug_clean.png","assets/mug_halfbroken.png","assets/mug_destroyed.png"],
+    stages:["mug_clean.png","mug_halfbroken.png","mug_destroyed.png"],
     colors:["#f7ede2","#ffffff","#ffd166","#6d4c41","#ef476f"]
   },
   {
@@ -971,7 +971,7 @@ const objects = [
     name:"Mirror",
     label:"Mirror",
     material:"glass",
-    stages:["assets/mirror_clean.png","assets/mirror_halfbroken.png","assets/mirror_destroyed.png"],
+    stages:["mirror_clean.png","mirror_halfbroken.png","mirror_destroyed.png"],
     colors:["rgba(223,247,255,.78)","rgba(255,255,255,.84)","rgba(72,202,228,.65)","#8b5e34","#bde0fe"]
   },
   {
@@ -979,7 +979,7 @@ const objects = [
     name:"Lightbulb",
     label:"Lightbulb",
     material:"glass",
-    stages:["assets/lightbulb_clean.png","assets/lightbulb_halfbroken.png","assets/lightbulb_destroyed.png"],
+    stages:["lightbulb_clean.png","lightbulb_halfbroken.png","lightbulb_destroyed.png"],
     colors:["rgba(255,255,255,.86)","#ffd166","rgba(189,224,254,.75)","#90e0ef","#f7f7fb"]
   },
   {
@@ -987,7 +987,7 @@ const objects = [
     name:"TV",
     label:"TV",
     material:"mixed",
-    stages:["assets/tv_clean.png","assets/tv_destroyed.png"],
+    stages:["tv_clean.png","tv_destroyed.png"],
     colors:["#111111","#333333","rgba(72,202,228,.7)","#9b5de5","#ef476f"]
   },
   {
@@ -995,7 +995,7 @@ const objects = [
     name:"Book",
     label:"Book",
     material:"paper",
-    stages:["assets/book_clean.png","assets/book_destroyed.png"],
+    stages:["book_clean.png","book_destroyed.png"],
     colors:["#f7ede2","#ffd166","#cdb4db","#b08968","#ffffff"]
   },
   {
@@ -1003,7 +1003,7 @@ const objects = [
     name:"Camera",
     label:"Camera",
     material:"mixed",
-    stages:["assets/camera_clean.png","assets/camera_destroyed.png"],
+    stages:["camera_clean.png","camera_destroyed.png"],
     colors:["#111111","#444444","#dff7ff","#ffd166","#ef476f"]
   },
   {
@@ -1011,7 +1011,7 @@ const objects = [
     name:"Keyboard",
     label:"Keyboard",
     material:"plastic",
-    stages:["assets/keyboard_clean.png","assets/keyboard_destroyed.png"],
+    stages:["keyboard_clean.png","keyboard_destroyed.png"],
     colors:["#f7f7fb","#777777","#111111","#06d6a0","#48cae4"]
   },
   {
@@ -1019,7 +1019,7 @@ const objects = [
     name:"Blue Mug",
     label:"Blue Mug",
     material:"ceramic",
-    stages:["assets/coffee_mug_blue_clean.png","assets/coffee_mug_blue_destroyed.png"],
+    stages:["coffee_mug_blue_clean.png","coffee_mug_blue_destroyed.png"],
     colors:["#bde0fe","#48cae4","#ffffff","#0b3954","#ffd166"]
   }
 ];
@@ -1183,6 +1183,7 @@ function setObjectImage(){
   test.onerror = () => {
     itemImg.style.display = "none";
     fallback.style.display = "flex";
+    message.textContent = "Image not found: " + src + ". Make sure the PNG is uploaded beside index.html.";
   };
 
   test.src = src;
@@ -1227,7 +1228,6 @@ function resetForObject(){
 
   setObjectImage();
   updateStats();
-  message.textContent = `Ready: ${currentObject().name}. Tap it or press SMASH.`;
 }
 
 function fullReset(){
