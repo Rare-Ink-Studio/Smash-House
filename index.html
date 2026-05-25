@@ -818,7 +818,7 @@ button:active{
     <div class="brand">
       <h1>SMASH HOUSE</h1>
       <div class="tagline">Break it. Breathe. Build something new.</div>
-      <div class="version">Release Prototype • Root Asset Build</div>
+      <div class="version">Release Prototype • Auto Asset Finder</div>
     </div>
 
     <div class="message" id="message">Choose an item. Smash safely. Then build with the pieces.</div>
@@ -870,7 +870,7 @@ button:active{
           <button class="danger" id="resetBtn">RESET</button>
         </div>
         <p class="tip">
-          This build looks for PNG files in the same GitHub folder as index.html. No assets folder required.
+          This build automatically checks for PNGs beside index.html and inside an assets folder.
         </p>
       </section>
 
@@ -948,6 +948,9 @@ let zCounter = 100;
 let selectedPieceId = null;
 let activeDrag = null;
 let lastTap = {id:null,time:0};
+let assetCache = {};
+
+const ASSET_VERSION = "smash-release-3";
 
 const objects = [
   {
@@ -1026,6 +1029,55 @@ const objects = [
 
 function currentObject(){
   return objects[selectedIndex];
+}
+
+function possibleAssetPaths(filename){
+  return [
+    filename,
+    "./" + filename,
+    "assets/" + filename,
+    "./assets/" + filename,
+    filename.replace(".png",".PNG"),
+    "./" + filename.replace(".png",".PNG"),
+    "assets/" + filename.replace(".png",".PNG"),
+    "./assets/" + filename.replace(".png",".PNG")
+  ];
+}
+
+function loadFirstWorkingImage(filename,success,fail){
+  if(assetCache[filename]){
+    success(assetCache[filename]);
+    return;
+  }
+
+  const paths = possibleAssetPaths(filename);
+  let index = 0;
+
+  function tryNext(){
+    if(index >= paths.length){
+      fail(paths);
+      return;
+    }
+
+    const rawPath = paths[index];
+    index++;
+
+    const test = new Image();
+
+    test.onload = () => {
+      assetCache[filename] = rawPath;
+      success(rawPath);
+    };
+
+    test.onerror = () => {
+      tryNext();
+    };
+
+    const separator = rawPath.includes("?") ? "&" : "?";
+    test.src = rawPath + separator + "v=" + ASSET_VERSION;
+  }
+
+  tryNext();
 }
 
 function startGame(){
@@ -1165,28 +1217,30 @@ function renderButtons(){
 function setObjectImage(){
   const obj = currentObject();
   const imageIndex = getImageIndexForStage(obj);
-  const src = obj.stages[imageIndex];
+  const filename = obj.stages[imageIndex];
 
   itemName.textContent = obj.name;
   fallback.textContent = obj.label.toUpperCase();
   itemImg.style.display = "none";
   fallback.style.display = "flex";
 
-  const test = new Image();
-
-  test.onload = () => {
-    itemImg.src = src;
-    itemImg.style.display = "block";
-    fallback.style.display = "none";
-  };
-
-  test.onerror = () => {
-    itemImg.style.display = "none";
-    fallback.style.display = "flex";
-    message.textContent = "Image not found: " + src + ". Make sure the PNG is uploaded beside index.html.";
-  };
-
-  test.src = src;
+  loadFirstWorkingImage(
+    filename,
+    (path) => {
+      const separator = path.includes("?") ? "&" : "?";
+      itemImg.src = path + separator + "v=" + ASSET_VERSION;
+      itemImg.style.display = "block";
+      fallback.style.display = "none";
+      if(!fragments.length){
+        message.textContent = `Ready: ${obj.name}. Tap it or press SMASH.`;
+      }
+    },
+    () => {
+      itemImg.style.display = "none";
+      fallback.style.display = "flex";
+      message.textContent = "PNG not found: " + filename + ". Put it beside index.html or inside assets folder.";
+    }
+  );
 }
 
 function getImageIndexForStage(obj){
