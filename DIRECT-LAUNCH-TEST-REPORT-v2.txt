@@ -1,0 +1,31 @@
+SMASH HOUSE v2 — DIRECT-LAUNCH TEST REPORT
+Date: August 9, 2026
+
+FIXED
+- The GitHub upload is rebuilt from the same source used by the v13.99 One Home
+  regression test. The earlier upload folder contained a stale index.html.
+- The complete nested assets tree is packaged beside index.html.
+- The initial image loader requests the selected artwork first instead of
+  starting approximately 23 MiB of object and shard downloads together.
+- Remaining images are loaded in deduplicated two-file idle batches.
+- Verified One Home play blocks a second hit while the first server hit is
+  pending and reports any verification failure to the parent One Home page.
+
+PRESERVED
+- All 20 assets/vase-pieces-v3 PNG files are byte-for-byte identical to the
+  approved multi-object build.
+- Six Vase visual damage frames remain present.
+- Multi-object progress, shared pieces, Auto Art, dragging, rotation, saving,
+  and RESET behavior are unchanged.
+
+AUTOMATED VALIDATION
+- Browser JavaScript parsed successfully.
+- One Home's three injection markers remain present.
+- The v13.99 Edge Function successfully injected one hit helper and one save
+  helper into this exact index.html.
+- The GitHub ZIP contains index.html, all top-level object artwork, six Vase
+  damage files, and exactly 20 approved Vase pieces.
+
+LIVE CHECK
+After GitHub Pages publishes, open the public Smash House address in a private
+window. Test the Vase plus at least one other object before deploying One Home.

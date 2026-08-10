@@ -800,6 +800,7 @@ let activeDrag = null;
 let lastTap = {id:null,time:0};
 let assetCache = {};
 let assetMissing = {};
+let assetLoadPromises = {};
 let sourceImageCache = {};
 let cleanSourceCache = {};
 let damageFrameCache = {};
@@ -807,12 +808,16 @@ let activeLayerIndex = 0;
 let currentVisibleFilename = "";
 let currentVisiblePath = "";
 let imageSwapToken = 0;
+let currentAssetReady = false;
+let currentAssetLoading = false;
+let currentAssetError = "";
 let isBrokenTransition = false;
 let lastSmashAt = 0;
 let lastImpactNormalized = {x:.5,y:.48};
 let fragmentBuildToken = 0;
+let deferredPreloadStarted = false;
 
-const ASSET_VERSION = "smash-multi-object-art-v1-20260809";
+const ASSET_VERSION = "smash-multi-object-art-v2-20260809";
 const SMASH_COOLDOWN_MS = 95;
 const USABLE_SHARD_COUNT = 20;
 const CLEAN_ALPHA_CUTOFF = 8;
@@ -984,16 +989,11 @@ function imageUrl(path){
 }
 
 function findWorkingImage(filename){
-  return new Promise((resolve,reject)=>{
-    if(assetCache[filename]){
-      resolve(assetCache[filename]);
-      return;
-    }
+  if(assetCache[filename]) return Promise.resolve(assetCache[filename]);
+  if(assetMissing[filename]) return Promise.reject(filename);
+  if(assetLoadPromises[filename]) return assetLoadPromises[filename];
 
-    if(assetMissing[filename]){
-      reject(filename);
-      return;
-    }
+  const request = new Promise((resolve,reject)=>{
 
     const paths = possibleAssetPaths(filename);
     let index = 0;
@@ -1001,6 +1001,7 @@ function findWorkingImage(filename){
     function tryNext(){
       if(index >= paths.length){
         assetMissing[filename] = true;
+        delete assetLoadPromises[filename];
         reject(filename);
         return;
       }
@@ -1010,6 +1011,7 @@ function findWorkingImage(filename){
 
       test.onload = () => {
         assetCache[filename] = rawPath;
+        delete assetLoadPromises[filename];
         resolve(rawPath);
       };
 
@@ -1019,6 +1021,8 @@ function findWorkingImage(filename){
 
     tryNext();
   });
+  assetLoadPromises[filename] = request;
+  return request;
 }
 
 function loadSourceImage(filename){
@@ -1483,14 +1487,52 @@ function paintShard(canvas,frag,visualWidth,visualHeight){
   });
 }
 
-function preloadAllImages(){
-  const all = [];
-  objects.forEach(obj => obj.stages.forEach(file => all.push(file)));
-  VASE_ART_SHARDS.forEach(shard => all.push(shard.path));
+function idleTask(callback){
+  if("requestIdleCallback" in window){
+    window.requestIdleCallback(callback,{timeout:900});
+  }else{
+    window.setTimeout(callback,40);
+  }
+}
 
-  Promise.allSettled(all.map(file => findWorkingImage(file))).then(()=>{
-    setObjectImage(true);
-  });
+function preloadInSmallBatches(files){
+  const queue = [...new Set(files)];
+  let cursor = 0;
+
+  function nextBatch(){
+    if(cursor >= queue.length) return;
+    const batch = queue.slice(cursor,cursor+2);
+    cursor += batch.length;
+    Promise.allSettled(batch.map(file=>findWorkingImage(file))).then(()=>{
+      window.setTimeout(()=>idleTask(nextBatch),80);
+    });
+  }
+
+  idleTask(nextBatch);
+}
+
+function scheduleDeferredImagePreload(){
+  if(deferredPreloadStarted) return;
+  deferredPreloadStarted = true;
+
+  const selected = currentObject();
+  const priority = selected.stages.slice(1);
+  if(selected.id === "vase"){
+    VASE_ART_SHARDS.forEach(shard=>priority.push(shard.path));
+  }
+
+  const remaining = [];
+  objects.forEach(obj=>obj.stages.forEach(file=>{
+    if(obj !== selected || file !== selected.stages[0]) remaining.push(file);
+  }));
+  if(selected.id !== "vase"){
+    VASE_ART_SHARDS.forEach(shard=>remaining.push(shard.path));
+  }
+
+  window.setTimeout(()=>{
+    loadSourceImage(selected.stages[0]).catch(()=>{});
+    preloadInSmallBatches(priority.concat(remaining));
+  },650);
 }
 
 function setObjectImage(forceMessage=false){
@@ -1503,6 +1545,9 @@ function setObjectImage(forceMessage=false){
   fallback.textContent = obj.label.toUpperCase();
 
   if(currentVisibleFilename === displayKey && imageLayers[activeLayerIndex].classList.contains("visible")){
+    currentAssetReady = true;
+    currentAssetLoading = false;
+    currentAssetError = "";
     if(forceMessage && fragments.length === 0){
       message.textContent = `Ready: ${obj.name}. Tap it or press SMASH.`;
     }
@@ -1510,6 +1555,9 @@ function setObjectImage(forceMessage=false){
   }
 
   const token = ++imageSwapToken;
+  currentAssetReady = false;
+  currentAssetLoading = true;
+  currentAssetError = "";
 
   function finishSwap(path,directSource=false){
     if(token !== imageSwapToken) return;
@@ -1528,6 +1576,13 @@ function setObjectImage(forceMessage=false){
       activeLayerIndex = nextLayerIndex;
       currentVisibleFilename = displayKey;
       currentVisiblePath = path;
+      currentAssetReady = true;
+      currentAssetLoading = false;
+      currentAssetError = "";
+      window.__smashHouseAssetReady = true;
+      window.dispatchEvent(new CustomEvent("smash-house:asset-ready",{
+        detail:{objectId:obj.id,filename}
+      }));
 
       if(forceMessage && fragments.length === 0){
         message.textContent = `Ready: ${obj.name}. Tap it or press SMASH.`;
@@ -1545,6 +1600,9 @@ function setObjectImage(forceMessage=false){
     loadSourceImage(filename).then(loaded=>{
       finishSwap(renderDamageFrame(obj,stage,loaded.image),true);
     }).catch(()=>{
+      currentAssetReady = false;
+      currentAssetLoading = false;
+      currentAssetError = "The object artwork could not be loaded.";
       fallback.style.display = "flex";
       imageLayers.forEach(layer=>layer.classList.remove("visible"));
       message.textContent = "The object artwork could not be loaded. Reset and try again.";
@@ -1560,6 +1618,9 @@ function setObjectImage(forceMessage=false){
   findWorkingImage(filename).then(path=>{
     finishSwap(path);
   }).catch(()=>{
+    currentAssetReady = false;
+    currentAssetLoading = false;
+    currentAssetError = "PNG not found: " + filename + ".";
     if(!currentVisiblePath){
       fallback.style.display = "flex";
       imageLayers.forEach(layer=>layer.classList.remove("visible"));
@@ -1756,6 +1817,9 @@ function switchToObject(index,forceMessage=true){
   activeDrag = null;
   currentVisibleFilename = "";
   currentVisiblePath = "";
+  currentAssetReady = false;
+  currentAssetLoading = false;
+  currentAssetError = "";
   imageSwapToken++;
   isBrokenTransition = false;
   lastSmashAt = 0;
@@ -1785,13 +1849,10 @@ function switchToObject(index,forceMessage=true){
     itemWrap.classList.add("multi-smash-target");
     itemWrap.style.pointerEvents = "auto";
     itemEl.style.display = "flex";
-    setObjectImage(false);
-
     if(forceMessage){
-      message.textContent = fragments.length > 0
-        ? `Ready: ${obj.name}. Your ${fragments.length} collected pieces will stay in the room.`
-        : `Ready: ${obj.name}. Tap it or press SMASH.`;
+      message.textContent = `Loading ${obj.name} artwork…`;
     }
+    setObjectImage(forceMessage);
   }
 
   renderButtons();
@@ -1834,6 +1895,31 @@ function updateStats(){
 
 function smash(e){
   if(!started) startGame();
+  if(typeof window.oneHomeBeforeSmash === "function" && !window.oneHomeBeforeSmash()) return;
+
+  const obj = currentObject();
+  const progress = progressForObject(obj);
+  const maxHits = maxHitsForObject(obj);
+
+  if(!currentAssetReady){
+    message.textContent = currentAssetLoading
+      ? `${obj.name} artwork is still loading. Please wait a moment.`
+      : (currentAssetError || `${obj.name} artwork is not ready. Reset and try again.`);
+    return;
+  }
+
+  if(stage === maxHits-1 && !breakAssetsReady(obj)){
+    message.textContent = `Preparing ${obj.name} pieces for the final hit…`;
+    ensureBreakAssets(obj).then(()=>{
+      if(currentObject() === obj && stage === maxHits-1){
+        message.textContent = `${obj.name} pieces are ready. Make the final hit.`;
+      }
+    }).catch(()=>{
+      currentAssetError = `${obj.name} pieces could not be loaded. Reset and try again.`;
+      message.textContent = currentAssetError;
+    });
+    return;
+  }
 
   const now = performance.now();
 
@@ -1842,10 +1928,6 @@ function smash(e){
   }
 
   lastSmashAt = now;
-
-  const obj = currentObject();
-  const progress = progressForObject(obj);
-  const maxHits = maxHitsForObject(obj);
 
   if(progress.broken || stage >= maxHits){
     message.textContent = `${obj.name} is already broken. Choose another item to add more pieces.`;
@@ -1902,6 +1984,19 @@ function smash(e){
   updateStats();
 }
 function makeCracks(level){
+}
+
+function breakAssetsReady(obj){
+  if(!sourceImageCache[obj.stages[0]]) return false;
+  return obj.id !== "vase" || VASE_ART_SHARDS.every(shard=>Boolean(assetCache[shard.path]));
+}
+
+function ensureBreakAssets(obj){
+  const requests = [loadSourceImage(obj.stages[0])];
+  if(obj.id === "vase"){
+    VASE_ART_SHARDS.forEach(shard=>requests.push(findWorkingImage(shard.path)));
+  }
+  return Promise.all(requests);
 }
 
 function eventClientPoint(e){
@@ -2626,8 +2721,8 @@ document.addEventListener("touchmove",(e)=>{
 
 resetObjectProgress();
 renderButtons();
-preloadAllImages();
 switchToObject(selectedIndex,true);
+scheduleDeferredImagePreload();
 updateStats();
 </script>
 </body>
