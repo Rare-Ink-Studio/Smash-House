@@ -1,0 +1,45 @@
+SMASH HOUSE — EXACT GITHUB UPLOAD STEPS
+
+IMPORTANT
+- Unzip this package on your computer first.
+- Do not upload the ZIP file itself to the repository.
+- Do not delete the existing GitHub files before this upload.
+- Upload everything inside the unzipped folder, including the complete assets
+  folder. This keeps the current site recoverable while the new files replace
+  and add what the updated game needs.
+
+STEPS
+1. Open the Smash-House repository shown in your video.
+2. Make sure the branch at the upper left says main.
+3. Click Add file.
+4. Click Upload files.
+5. On your computer, open the unzipped GitHub package folder.
+6. Press Ctrl+A to select everything inside that folder.
+7. Drag the selected files AND the assets folder into GitHub's upload box.
+8. Wait until GitHub finishes listing all files.
+9. Confirm the upload list includes:
+   - index.html
+   - SmashGlass.mp3
+   - smash_house_background.png
+   - smash_house_banner.png
+   - assets/vase-damage-v3/vase_clean_v3.png
+   - assets/vase-damage-v3/vase_hit_1.png through vase_hit_5.png
+   - assets/vase-pieces-v3/vase_piece_01.png through vase_piece_20.png
+10. In the commit message box, type:
+    Update Smash House multi-object artwork
+11. Choose Commit directly to the main branch.
+12. Click Commit changes.
+13. Wait for the green check mark beside the new commit.
+14. Open the GitHub Pages Smash House link and refresh the page.
+
+FIRST LIVE CHECK
+1. Break the Vase and confirm its 20 approved pieces appear.
+2. Choose Mug and confirm all Vase pieces remain.
+3. Break Mug and confirm its pieces join the Vase pieces.
+4. Press Auto Art and confirm all mixed pieces are used.
+5. Save and reopen the mixed artwork from Mission Gallery.
+
+The older destroyed and half-broken PNG files currently visible at the main
+level of GitHub may remain for this first upload. The updated index.html does
+not use them. Leaving them in place during this update prevents an accidental
+deletion from removing something before the new site is confirmed.

@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<meta name="smash-house-build" content="M1-NO-LINES-ARTWORK-PIECES" />
 <title>Smash House</title>
 
 <style>
@@ -203,10 +207,6 @@ button:active{
   pointer-events:none;
 }
 
-.wall-lines{
-  display:none;
-}
-
 .floor{
   display:none;
 }
@@ -223,6 +223,10 @@ button:active{
   justify-content:center;
   z-index:6;
   pointer-events:auto;
+}
+
+.item-wrap.multi-smash-target{
+  z-index:260;
 }
 
 .item{
@@ -309,33 +313,6 @@ button:active{
   white-space:nowrap;
 }
 
-.cracks{
-  position:absolute;
-  inset:0;
-  z-index:5;
-  pointer-events:none;
-  opacity:0;
-}
-
-.cracks.show{
-  opacity:1;
-}
-
-.cracks svg{
-  width:100%;
-  height:100%;
-  overflow:visible;
-}
-
-.cracks path{
-  fill:none;
-  stroke:white;
-  stroke-width:4.5;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-  filter:drop-shadow(0 0 5px rgba(0,0,0,.85));
-}
-
 .impact{
   position:absolute;
   width:18px;
@@ -385,36 +362,37 @@ button:active{
   pointer-events:auto;
   cursor:grab;
   touch-action:none;
-  border-radius:7px 16px 8px 12px;
-  clip-path:polygon(var(--poly));
   transform-origin:center center;
-  box-shadow:
-    inset 3px 3px 0 rgba(255,255,255,.22),
-    inset -4px -5px 0 rgba(0,0,0,.12),
-    0 10px 16px rgba(0,0,0,.28);
-  min-width:38px;
-  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:0;
+  outline:0;
+  box-shadow:none;
 }
 
-.fragment.glass{
-  opacity:.86;
-  border:1px solid rgba(255,255,255,.45);
+.fragment-canvas,
+.fragment-art{
+  display:block;
+  pointer-events:none;
+  transform-origin:center center;
+  filter:none;
 }
 
-.fragment.selected{
-  outline:3px solid rgba(255,209,102,.9);
-  outline-offset:4px;
-  filter:brightness(1.25);
+.fragment.selected .fragment-canvas,
+.fragment.selected .fragment-art{
+  filter:none;
 }
 
 .fragment.dragging{
   cursor:grabbing;
   z-index:999999!important;
-  filter:brightness(1.35);
-  box-shadow:
-    inset 3px 3px 0 rgba(255,255,255,.28),
-    0 23px 30px rgba(0,0,0,.42),
-    0 0 25px rgba(255,209,102,.35);
+}
+
+.fragment.dragging .fragment-canvas,
+.fragment.dragging .fragment-art{
+  filter:none;
 }
 
 .create-hint{
@@ -489,6 +467,15 @@ button:active{
   color:rgba(0,0,0,.68);
 }
 
+.item-btn.broken:not(.active){
+  border-color:rgba(6,214,160,.72);
+  background:rgba(6,214,160,.16);
+}
+
+.item-btn.broken:not(.active) .stage-count{
+  color:var(--green);
+}
+
 .controls{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -522,6 +509,8 @@ button:active{
   gap:7px;
   overflow:auto;
   padding-bottom:4px;
+  touch-action:pan-x;
+  overscroll-behavior-x:contain;
 }
 
 .empty{
@@ -540,13 +529,6 @@ button:active{
   border:2px solid rgba(255,255,255,.18);
   background:linear-gradient(180deg,#302d38,#14141a);
   cursor:pointer;
-}
-
-.thumb-piece{
-  position:absolute;
-  border-radius:4px;
-  clip-path:polygon(var(--poly));
-  box-shadow:inset 1px 1px 0 rgba(255,255,255,.2);
 }
 
 .start-screen,.modal{
@@ -628,7 +610,8 @@ button:active{
 }
 
 @media(max-width:900px){
-  .app{padding:6px;gap:6px}
+  html,body{touch-action:pan-y}
+  .app{padding:6px;gap:6px;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
   .topbar{grid-template-columns:1fr;gap:5px}
   .brand{text-align:center}
   .soundbox{justify-content:center}
@@ -637,9 +620,9 @@ button:active{
   .stat{padding:5px 3px;border-radius:11px}
   .stat b{font-size:9px}
   .stat span{font-size:13px}
-  .game-shell{grid-template-columns:1fr;grid-template-rows:1fr auto;gap:7px}
-  .room{min-height:320px}
-  .side{max-height:39dvh;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .game-shell{flex:0 0 auto;display:flex;flex-direction:column;gap:7px}
+  .room{flex:0 0 auto;height:clamp(320px,56dvh,520px);min-height:320px}
+  .side{max-height:none;overflow:visible;display:grid;grid-template-columns:1fr 1fr;gap:7px;touch-action:pan-y}
   .gallery-panel{grid-column:1 / -1}
   .panel{padding:8px;border-radius:16px}
   .panel-title{font-size:12px;margin-bottom:6px}
@@ -656,9 +639,9 @@ button:active{
 @media(max-width:520px){
   .brand h1{font-size:29px}
   .tagline,.version{display:none}
-  .room{min-height:305px;border-radius:19px}
+  .room{height:clamp(305px,54dvh,430px);min-height:305px;border-radius:19px}
   .item-wrap{width:min(250px,66vw);height:min(250px,66vw);top:43%}
-  .side{grid-template-columns:1fr;max-height:43dvh}
+  .side{grid-template-columns:1fr;max-height:none}
   .item-grid{grid-template-columns:repeat(4,1fr)}
   .controls{grid-template-columns:repeat(4,1fr)}
   .soundbox input[type="range"]{width:72px}
@@ -684,7 +667,7 @@ button:active{
     <div class="brand">
       <h1>SMASH HOUSE</h1>
       <div class="tagline">Break it. Breathe. Build something new.</div>
-      <div class="version">Release Prototype • Smash House Background Build</div>
+      <div class="version">Multi-Object Art Test Build • August 9, 2026</div>
     </div>
 
     <div class="message" id="message">Loading Smash House assets...</div>
@@ -705,7 +688,6 @@ button:active{
 
   <div class="game-shell">
     <main class="room" id="room">
-      <div class="wall-lines"></div>
       <div class="floor"></div>
 
       <div class="item-wrap" id="itemWrap">
@@ -713,13 +695,12 @@ button:active{
           <img class="item-img" id="itemImgA" alt="" />
           <img class="item-img" id="itemImgB" alt="" />
           <div class="fallback" id="fallback">VASE</div>
-          <div class="cracks" id="cracks"></div>
           <div class="item-name" id="itemName">Vase</div>
         </div>
       </div>
 
       <div class="fragments" id="fragments"></div>
-      <div class="create-hint">Create Mode: drag any piece • tap to bring forward • double tap/click to rotate</div>
+      <div class="create-hint">Keep smashing different items • drag any piece • tap to bring forward • double tap/click to rotate</div>
     </main>
 
     <aside class="side">
@@ -737,7 +718,7 @@ button:active{
           <button class="danger" id="resetBtn">RESET</button>
         </div>
         <p class="tip">
-          Fast tapping is smoothed with cached image layers. Create Mode is direct drag.
+          Break one item, choose another, then combine every piece into one creation.
         </p>
       </section>
 
@@ -778,7 +759,6 @@ const itemImgA = $("itemImgA");
 const itemImgB = $("itemImgB");
 const imageLayers = [itemImgA,itemImgB];
 const fallback = $("fallback");
-const cracks = $("cracks");
 const itemName = $("itemName");
 const fragmentLayer = $("fragments");
 const itemGrid = $("itemGrid");
@@ -812,6 +792,7 @@ let score = 0;
 let release = 0;
 let hits = 0;
 let fragments = [];
+let objectProgress = {};
 let savedCreations = [];
 let zCounter = 100;
 let selectedPieceId = null;
@@ -819,15 +800,57 @@ let activeDrag = null;
 let lastTap = {id:null,time:0};
 let assetCache = {};
 let assetMissing = {};
+let sourceImageCache = {};
+let cleanSourceCache = {};
+let damageFrameCache = {};
 let activeLayerIndex = 0;
 let currentVisibleFilename = "";
 let currentVisiblePath = "";
 let imageSwapToken = 0;
 let isBrokenTransition = false;
 let lastSmashAt = 0;
+let lastImpactNormalized = {x:.5,y:.48};
+let fragmentBuildToken = 0;
 
-const ASSET_VERSION = "smash-best-release-5";
+const ASSET_VERSION = "smash-multi-object-art-v1-20260809";
 const SMASH_COOLDOWN_MS = 95;
+const USABLE_SHARD_COUNT = 20;
+const CLEAN_ALPHA_CUTOFF = 8;
+const MIN_SHARD_HIT_SIZE = 72;
+const SHARD_DISPLAY_MULTIPLIER = 4.2;
+const MIN_VISIBLE_ART_ROOT = 72;
+const MAX_VISIBLE_SHARD_SIZE = 240;
+const LIGHT_BACKGROUND_SOURCE_FILES = new Set(["tv_clean.png"]);
+const DAMAGE_CRACK_PATHS = [
+  [[.52,.48],[.58,.54],[.55,.63],[.64,.72]],
+  [[.52,.48],[.45,.42],[.38,.45],[.29,.37]],
+  [[.52,.48],[.54,.37],[.61,.29],[.58,.18]],
+  [[.52,.48],[.43,.55],[.36,.64],[.25,.67]],
+  [[.52,.48],[.63,.46],[.72,.39],[.82,.43]],
+  [[.52,.48],[.49,.59],[.43,.70],[.48,.82]]
+];
+const VASE_ART_SHARDS = [
+  {path:"assets/vase-pieces-v3/vase_piece_01.png",sourceX:673,sourceY:63,sourceW:93,sourceH:123,visibleArea:7062},
+  {path:"assets/vase-pieces-v3/vase_piece_02.png",sourceX:809,sourceY:67,sourceW:94,sourceH:122,visibleArea:6872},
+  {path:"assets/vase-pieces-v3/vase_piece_03.png",sourceX:886,sourceY:73,sourceW:169,sourceH:204,visibleArea:7934},
+  {path:"assets/vase-pieces-v3/vase_piece_04.png",sourceX:715,sourceY:71,sourceW:148,sourceH:203,visibleArea:11330},
+  {path:"assets/vase-pieces-v3/vase_piece_05.png",sourceX:474,sourceY:119,sourceW:154,sourceH:171,visibleArea:12270},
+  {path:"assets/vase-pieces-v3/vase_piece_06.png",sourceX:585,sourceY:91,sourceW:175,sourceH:249,visibleArea:19659},
+  {path:"assets/vase-pieces-v3/vase_piece_07.png",sourceX:838,sourceY:160,sourceW:270,sourceH:161,visibleArea:18566},
+  {path:"assets/vase-pieces-v3/vase_piece_08.png",sourceX:725,sourceY:254,sourceW:157,sourceH:142,visibleArea:14663},
+  {path:"assets/vase-pieces-v3/vase_piece_09.png",sourceX:462,sourceY:265,sourceW:209,sourceH:173,visibleArea:13786},
+  {path:"assets/vase-pieces-v3/vase_piece_10.png",sourceX:852,sourceY:294,sourceW:190,sourceH:142,visibleArea:13052},
+  {path:"assets/vase-pieces-v3/vase_piece_11.png",sourceX:629,sourceY:323,sourceW:151,sourceH:165,visibleArea:14328},
+  {path:"assets/vase-pieces-v3/vase_piece_12.png",sourceX:719,sourceY:385,sourceW:167,sourceH:156,visibleArea:15801},
+  {path:"assets/vase-pieces-v3/vase_piece_13.png",sourceX:598,sourceY:467,sourceW:162,sourceH:163,visibleArea:16843},
+  {path:"assets/vase-pieces-v3/vase_piece_14.png",sourceX:781,sourceY:473,sourceW:156,sourceH:143,visibleArea:13209},
+  {path:"assets/vase-pieces-v3/vase_piece_15.png",sourceX:687,sourceY:526,sourceW:151,sourceH:173,visibleArea:14227},
+  {path:"assets/vase-pieces-v3/vase_piece_16.png",sourceX:799,sourceY:600,sourceW:138,sourceH:161,visibleArea:12700},
+  {path:"assets/vase-pieces-v3/vase_piece_17.png",sourceX:599,sourceY:620,sourceW:159,sourceH:169,visibleArea:16536},
+  {path:"assets/vase-pieces-v3/vase_piece_18.png",sourceX:722,sourceY:677,sourceW:182,sourceH:165,visibleArea:15238},
+  {path:"assets/vase-pieces-v3/vase_piece_19.png",sourceX:617,sourceY:756,sourceW:190,sourceH:151,visibleArea:17247},
+  {path:"assets/vase-pieces-v3/vase_piece_20.png",sourceX:794,sourceY:759,sourceW:216,sourceH:148,visibleArea:13833}
+];
 
 const objects = [
   {
@@ -835,7 +858,16 @@ const objects = [
     name:"Vase",
     label:"Vase",
     material:"glass",
-    stages:["vase_clean.png","vase_halfbroken.png","vase_destroyed.png"],
+    maxHits:5,
+    stages:[
+      "vase-damage-v3/vase_clean_v3.png",
+      "vase-damage-v3/vase_hit_1.png",
+      "vase-damage-v3/vase_hit_2.png",
+      "vase-damage-v3/vase_hit_3.png",
+      "vase-damage-v3/vase_hit_4.png",
+      "vase-damage-v3/vase_hit_5.png"
+    ],
+    shardRegion:{x:.25,y:.02,w:.50,h:.96},
     colors:["rgba(189,224,254,.78)","rgba(255,255,255,.84)","rgba(72,202,228,.65)","#caf0f8","#90e0ef"]
   },
   {
@@ -843,7 +875,10 @@ const objects = [
     name:"Mug",
     label:"Mug",
     material:"ceramic",
-    stages:["mug_clean.png","mug_halfbroken.png","mug_destroyed.png"],
+    maxHits:5,
+    stages:["mug_clean.png"],
+    damageColor:"rgba(68,43,31,.94)",
+    damageOrigin:{x:.54,y:.50},
     colors:["#f7ede2","#ffffff","#ffd166","#6d4c41","#ef476f"]
   },
   {
@@ -851,7 +886,10 @@ const objects = [
     name:"Mirror",
     label:"Mirror",
     material:"glass",
-    stages:["mirror_clean.png","mirror_halfbroken.png","mirror_destroyed.png"],
+    maxHits:5,
+    stages:["mirror_clean.png"],
+    damageColor:"rgba(45,52,57,.92)",
+    damageOrigin:{x:.51,y:.42},
     colors:["rgba(223,247,255,.78)","rgba(255,255,255,.84)","rgba(72,202,228,.65)","#8b5e34","#bde0fe"]
   },
   {
@@ -859,7 +897,10 @@ const objects = [
     name:"Lightbulb",
     label:"Lightbulb",
     material:"glass",
-    stages:["lightbulb_clean.png","lightbulb_halfbroken.png","lightbulb_destroyed.png"],
+    maxHits:5,
+    stages:["lightbulb_clean.png"],
+    damageColor:"rgba(79,54,30,.94)",
+    damageOrigin:{x:.53,y:.40},
     colors:["rgba(255,255,255,.86)","#ffd166","rgba(189,224,254,.75)","#90e0ef","#f7f7fb"]
   },
   {
@@ -867,7 +908,10 @@ const objects = [
     name:"TV",
     label:"TV",
     material:"mixed",
-    stages:["tv_clean.png","tv_destroyed.png"],
+    maxHits:4,
+    stages:["tv_clean.png"],
+    damageColor:"rgba(174,211,219,.94)",
+    damageOrigin:{x:.53,y:.43},
     colors:["#111111","#333333","rgba(72,202,228,.7)","#9b5de5","#ef476f"]
   },
   {
@@ -875,7 +919,10 @@ const objects = [
     name:"Book",
     label:"Book",
     material:"paper",
-    stages:["book_clean.png","book_destroyed.png"],
+    maxHits:4,
+    stages:["book_clean.png"],
+    damageColor:"rgba(84,57,35,.94)",
+    damageOrigin:{x:.53,y:.53},
     colors:["#f7ede2","#ffd166","#cdb4db","#b08968","#ffffff"]
   },
   {
@@ -883,7 +930,10 @@ const objects = [
     name:"Camera",
     label:"Camera",
     material:"mixed",
-    stages:["camera_clean.png","camera_destroyed.png"],
+    maxHits:4,
+    stages:["camera_clean.png"],
+    damageColor:"rgba(167,216,226,.95)",
+    damageOrigin:{x:.55,y:.55},
     colors:["#111111","#444444","#dff7ff","#ffd166","#ef476f"]
   },
   {
@@ -891,7 +941,10 @@ const objects = [
     name:"Keyboard",
     label:"Keyboard",
     material:"plastic",
-    stages:["keyboard_clean.png","keyboard_destroyed.png"],
+    maxHits:4,
+    stages:["keyboard_clean.png"],
+    damageColor:"rgba(180,213,220,.94)",
+    damageOrigin:{x:.52,y:.50},
     colors:["#f7f7fb","#777777","#111111","#06d6a0","#48cae4"]
   },
   {
@@ -899,7 +952,10 @@ const objects = [
     name:"Blue Mug",
     label:"Blue Mug",
     material:"ceramic",
-    stages:["coffee_mug_blue_clean.png","coffee_mug_blue_destroyed.png"],
+    maxHits:4,
+    stages:["coffee_mug_blue_clean.png"],
+    damageColor:"rgba(69,40,27,.94)",
+    damageOrigin:{x:.55,y:.48},
     colors:["#bde0fe","#48cae4","#ffffff","#0b3954","#ffd166"]
   }
 ];
@@ -965,9 +1021,472 @@ function findWorkingImage(filename){
   });
 }
 
+function loadSourceImage(filename){
+  if(sourceImageCache[filename]){
+    return Promise.resolve(sourceImageCache[filename]);
+  }
+
+  return findWorkingImage(filename).then(path=>new Promise((resolve,reject)=>{
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => {
+      const loaded = {image,path};
+      sourceImageCache[filename] = loaded;
+      resolve(loaded);
+    };
+    image.onerror = () => reject(new Error("Artwork could not be loaded: " + filename));
+    image.src = imageUrl(path);
+  }));
+}
+
+function sourceDisplayMetrics(image){
+  const roomRect = room.getBoundingClientRect();
+  const wrapRect = itemWrap.getBoundingClientRect();
+  const imageBoxW = wrapRect.width * .92;
+  const imageBoxH = wrapRect.height * .92;
+  const scale = Math.min(imageBoxW / image.naturalWidth,imageBoxH / image.naturalHeight);
+  const width = image.naturalWidth * scale;
+  const height = image.naturalHeight * scale;
+
+  return {
+    scale,
+    width,
+    height,
+    left:wrapRect.left - roomRect.left + (wrapRect.width - width) / 2,
+    top:wrapRect.top - roomRect.top + (wrapRect.height - height) / 2
+  };
+}
+
+function removeConnectedLightBackground(pixels,width,height){
+  const total = width*height;
+  const background = new Uint8Array(total);
+  const queued = new Uint8Array(total);
+  const queue = new Int32Array(total);
+  let head = 0;
+  let tail = 0;
+
+  function isBackgroundCandidate(index,loose=false){
+    const offset = index*4;
+    const r = pixels[offset];
+    const g = pixels[offset+1];
+    const b = pixels[offset+2];
+    const minChannel = Math.min(r,g,b);
+    const maxChannel = Math.max(r,g,b);
+    return minChannel >= (loose ? 195 : 225) && maxChannel-minChannel <= (loose ? 50 : 35);
+  }
+
+  function enqueue(index){
+    if(queued[index] || !isBackgroundCandidate(index,false)) return;
+    queued[index] = 1;
+    background[index] = 1;
+    queue[tail++] = index;
+  }
+
+  for(let x=0;x<width;x++){
+    enqueue(x);
+    enqueue((height-1)*width+x);
+  }
+  for(let y=0;y<height;y++){
+    enqueue(y*width);
+    enqueue(y*width+width-1);
+  }
+
+  while(head < tail){
+    const index = queue[head++];
+    const x = index%width;
+    const y = Math.floor(index/width);
+    if(x > 0) enqueue(index-1);
+    if(x+1 < width) enqueue(index+1);
+    if(y > 0) enqueue(index-width);
+    if(y+1 < height) enqueue(index+width);
+  }
+
+  for(let pass=0;pass<2;pass++){
+    const added = [];
+    for(let index=0;index<total;index++){
+      if(background[index] || !isBackgroundCandidate(index,true)) continue;
+      const x = index%width;
+      const y = Math.floor(index/width);
+      if(
+        (x > 0 && background[index-1]) ||
+        (x+1 < width && background[index+1]) ||
+        (y > 0 && background[index-width]) ||
+        (y+1 < height && background[index+width])
+      ) added.push(index);
+    }
+    added.forEach(index=>{ background[index] = 1; });
+  }
+
+  for(let index=0;index<total;index++){
+    if(!background[index]) continue;
+    const offset = index*4;
+    pixels[offset] = 0;
+    pixels[offset+1] = 0;
+    pixels[offset+2] = 0;
+    pixels[offset+3] = 0;
+  }
+}
+
+function cleanSourceArtwork(filename,image){
+  if(cleanSourceCache[filename]){
+    return cleanSourceCache[filename];
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+
+  const ctx = canvas.getContext("2d",{willReadFrequently:true});
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(image,0,0);
+
+  const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const pixels = imageData.data;
+
+  if(LIGHT_BACKGROUND_SOURCE_FILES.has(filename)){
+    removeConnectedLightBackground(pixels,canvas.width,canvas.height);
+  }
+
+  let minX = canvas.width;
+  let minY = canvas.height;
+  let maxX = -1;
+  let maxY = -1;
+  let visibleArea = 0;
+
+  for(let i=0;i<pixels.length;i+=4){
+    if(pixels[i+3] < CLEAN_ALPHA_CUTOFF){
+      pixels[i] = 0;
+      pixels[i+1] = 0;
+      pixels[i+2] = 0;
+      pixels[i+3] = 0;
+      continue;
+    }
+    const pixelIndex = i/4;
+    const x = pixelIndex%canvas.width;
+    const y = Math.floor(pixelIndex/canvas.width);
+    minX = Math.min(minX,x);
+    minY = Math.min(minY,y);
+    maxX = Math.max(maxX,x);
+    maxY = Math.max(maxY,y);
+    visibleArea++;
+  }
+
+  ctx.putImageData(imageData,0,0);
+  cleanSourceCache[filename] = {
+    canvas,
+    pixels,
+    width:canvas.width,
+    height:canvas.height,
+    visibleArea,
+    bounds:maxX >= minX && maxY >= minY
+      ? {x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1}
+      : {x:0,y:0,w:canvas.width,h:canvas.height}
+  };
+  return cleanSourceCache[filename];
+}
+
+function renderDamageFrame(obj,damageLevel,image){
+  const level = clamp(Math.round(damageLevel),0,obj.maxHits);
+  const cacheKey = `${obj.id}:${level}`;
+  if(damageFrameCache[cacheKey]) return damageFrameCache[cacheKey];
+
+  const cleanSource = cleanSourceArtwork(obj.stages[0],image);
+  const canvas = document.createElement("canvas");
+  canvas.width = cleanSource.width;
+  canvas.height = cleanSource.height;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(cleanSource.canvas,0,0);
+
+  if(level > 0){
+    const bounds = cleanSource.bounds;
+    const origin = obj.damageOrigin || {x:.52,y:.48};
+    const offsetX = origin.x-.52;
+    const offsetY = origin.y-.48;
+    const crackCount = Math.min(
+      DAMAGE_CRACK_PATHS.length,
+      Math.max(2,Math.ceil(level/obj.maxHits*DAMAGE_CRACK_PATHS.length))
+    );
+    const crackWidth = Math.max(3,Math.min(bounds.w,bounds.h)*.012);
+
+    ctx.save();
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.strokeStyle = obj.damageColor || "rgba(52,42,35,.94)";
+    ctx.lineWidth = crackWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    for(let i=0;i<crackCount;i++){
+      const points = DAMAGE_CRACK_PATHS[i];
+      ctx.beginPath();
+      points.forEach((point,index)=>{
+        const x = bounds.x+clamp(point[0]+offsetX,.08,.92)*bounds.w;
+        const y = bounds.y+clamp(point[1]+offsetY,.08,.92)*bounds.h;
+        if(index === 0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+    }
+
+    const impactX = bounds.x+origin.x*bounds.w;
+    const impactY = bounds.y+origin.y*bounds.h;
+    ctx.beginPath();
+    ctx.arc(impactX,impactY,crackWidth*1.15,0,Math.PI*2);
+    ctx.fillStyle = obj.damageColor || "rgba(52,42,35,.94)";
+    ctx.fill();
+    ctx.restore();
+
+    const chipLocations = [[.63,.59],[.39,.42],[.53,.72]];
+    const chipCount = Math.min(chipLocations.length,Math.max(0,level-2));
+    if(chipCount > 0){
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-out";
+      chipLocations.slice(0,chipCount).forEach((point,index)=>{
+        const cx = bounds.x+clamp(point[0]+offsetX,.08,.92)*bounds.w;
+        const cy = bounds.y+clamp(point[1]+offsetY,.08,.92)*bounds.h;
+        const size = Math.max(5,Math.min(bounds.w,bounds.h)*(.022+index*.006));
+        ctx.beginPath();
+        ctx.moveTo(cx-size,cy-size*.35);
+        ctx.lineTo(cx+size*.8,cy-size);
+        ctx.lineTo(cx+size*.35,cy+size);
+        ctx.closePath();
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+  }
+
+  const rendered = canvas.toDataURL("image/png");
+  damageFrameCache[cacheKey] = rendered;
+  return rendered;
+}
+
+function pointInsidePolygon(x,y,points){
+  let inside = false;
+
+  for(let i=0,j=points.length-1;i<points.length;j=i++){
+    const a = points[i];
+    const b = points[j];
+    const crosses = ((a.y > y) !== (b.y > y)) &&
+      (x < (b.x-a.x)*(y-a.y)/((b.y-a.y)||.000001)+a.x);
+    if(crosses) inside = !inside;
+  }
+
+  return inside;
+}
+
+function tightenDynamicShards(definitions,cleanSource){
+  return definitions.map(definition=>{
+    const absolutePoints = definition.points.map(point=>({
+      x:point.x+definition.sourceX,
+      y:point.y+definition.sourceY
+    }));
+    const startX = clamp(Math.floor(definition.sourceX),0,cleanSource.width-1);
+    const startY = clamp(Math.floor(definition.sourceY),0,cleanSource.height-1);
+    const endX = clamp(Math.ceil(definition.sourceX+definition.sourceW),1,cleanSource.width);
+    const endY = clamp(Math.ceil(definition.sourceY+definition.sourceH),1,cleanSource.height);
+    let minX = endX;
+    let minY = endY;
+    let maxX = -1;
+    let maxY = -1;
+    let visibleArea = 0;
+
+    for(let y=startY;y<endY;y++){
+      for(let x=startX;x<endX;x++){
+        const alpha = cleanSource.pixels[(y*cleanSource.width+x)*4+3];
+        if(alpha < CLEAN_ALPHA_CUTOFF || !pointInsidePolygon(x+.5,y+.5,absolutePoints)) continue;
+        visibleArea++;
+        minX = Math.min(minX,x);
+        minY = Math.min(minY,y);
+        maxX = Math.max(maxX,x);
+        maxY = Math.max(maxY,y);
+      }
+    }
+
+    if(visibleArea < 40 || maxX < minX || maxY < minY) return null;
+
+    const pad = 2;
+    minX = Math.max(startX,minX-pad);
+    minY = Math.max(startY,minY-pad);
+    maxX = Math.min(endX-1,maxX+pad);
+    maxY = Math.min(endY-1,maxY+pad);
+
+    const localPoints = absolutePoints.map(point=>({
+      x:point.x-minX,
+      y:point.y-minY
+    }));
+    const sourceW = maxX-minX+1;
+    const sourceH = maxY-minY+1;
+
+    return {
+      ...definition,
+      sourceX:minX,
+      sourceY:minY,
+      sourceW,
+      sourceH,
+      visibleArea,
+      points:localPoints,
+      poly:pointsToCss(localPoints,sourceW,sourceH)
+    };
+  }).filter(Boolean);
+}
+
+function boundaryIntersection(width,height,impact,angle){
+  const dx = Math.cos(angle);
+  const dy = Math.sin(angle);
+  let distance = Infinity;
+
+  if(dx > .00001) distance = Math.min(distance,(width-impact.x)/dx);
+  if(dx < -.00001) distance = Math.min(distance,(0-impact.x)/dx);
+  if(dy > .00001) distance = Math.min(distance,(height-impact.y)/dy);
+  if(dy < -.00001) distance = Math.min(distance,(0-impact.y)/dy);
+
+  return {
+    x:clamp(impact.x + dx*distance,0,width),
+    y:clamp(impact.y + dy*distance,0,height),
+    distance
+  };
+}
+
+function boundaryPosition(point,width,height){
+  const tolerance = .01;
+  if(Math.abs(point.y) <= tolerance) return point.x;
+  if(Math.abs(point.x-width) <= tolerance) return width + point.y;
+  if(Math.abs(point.y-height) <= tolerance) return width + height + (width-point.x);
+  return width + height + width + (height-point.y);
+}
+
+function boundaryCornersBetween(first,second,width,height){
+  const perimeter = 2*(width+height);
+  const start = boundaryPosition(first,width,height);
+  let end = boundaryPosition(second,width,height);
+  if(end <= start) end += perimeter;
+
+  const corners = [
+    {position:0,point:{x:0,y:0}},
+    {position:width,point:{x:width,y:0}},
+    {position:width+height,point:{x:width,y:height}},
+    {position:2*width+height,point:{x:0,y:height}}
+  ];
+  const between = [];
+
+  [0,perimeter].forEach(offset=>{
+    corners.forEach(corner=>{
+      const position = corner.position + offset;
+      if(position > start+.01 && position < end-.01){
+        between.push({position,point:corner.point});
+      }
+    });
+  });
+
+  return between.sort((a,b)=>a.position-b.position).map(entry=>entry.point);
+}
+
+function polygonBounds(points){
+  const xs = points.map(point=>point.x);
+  const ys = points.map(point=>point.y);
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  const maxX = Math.max(...xs);
+  const maxY = Math.max(...ys);
+  return {minX,minY,maxX,maxY,width:maxX-minX,height:maxY-minY};
+}
+
+function makeImpactFracture(width,height,count,impactNormalized){
+  const rayCount = Math.max(8,Math.round(count/2));
+  const impact = {
+    x:width*clamp(impactNormalized.x,.24,.76),
+    y:height*clamp(impactNormalized.y,.24,.76)
+  };
+  const step = Math.PI*2/rayCount;
+  const angles = [];
+
+  for(let i=0;i<rayCount;i++){
+    angles.push(-Math.PI/2 + i*step + rand(-step*.14,step*.14));
+  }
+  angles.sort((a,b)=>a-b);
+
+  const rays = angles.map(angle=>{
+    const outer = boundaryIntersection(width,height,impact,angle);
+    const innerDistance = outer.distance * rand(.31,.47);
+    return {
+      angle,
+      outer:{x:outer.x,y:outer.y},
+      inner:{
+        x:impact.x + Math.cos(angle)*innerDistance,
+        y:impact.y + Math.sin(angle)*innerDistance
+      }
+    };
+  });
+
+  const polygons = [];
+  for(let i=0;i<rays.length;i++){
+    const current = rays[i];
+    const next = rays[(i+1)%rays.length];
+    polygons.push([
+      {x:impact.x,y:impact.y},
+      {x:current.inner.x,y:current.inner.y},
+      {x:next.inner.x,y:next.inner.y}
+    ]);
+    polygons.push([
+      {x:current.inner.x,y:current.inner.y},
+      {x:current.outer.x,y:current.outer.y},
+      ...boundaryCornersBetween(current.outer,next.outer,width,height),
+      {x:next.outer.x,y:next.outer.y},
+      {x:next.inner.x,y:next.inner.y}
+    ]);
+  }
+
+  return polygons.slice(0,count);
+}
+
+function pointsToCss(points,width,height){
+  return points.map(point=>{
+    const x = clamp(point.x/Math.max(1,width)*100,0,100).toFixed(2);
+    const y = clamp(point.y/Math.max(1,height)*100,0,100).toFixed(2);
+    return `${x}% ${y}%`;
+  }).join(",");
+}
+
+function paintShard(canvas,frag,visualWidth,visualHeight){
+  loadSourceImage(frag.sourceFilename).then(loaded=>{
+    if(!canvas.isConnected) return;
+    const cleanSource = cleanSourceArtwork(frag.sourceFilename,loaded.image);
+    const pixelRatio = Math.min(2,Math.max(1,window.devicePixelRatio||1));
+    const pixelWidth = Math.max(1,Math.round(visualWidth*pixelRatio));
+    const pixelHeight = Math.max(1,Math.round(visualHeight*pixelRatio));
+    const scaleX = pixelWidth/Math.max(1,frag.sourceW);
+    const scaleY = pixelHeight/Math.max(1,frag.sourceH);
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = pixelWidth;
+    canvas.height = pixelHeight;
+    ctx.clearRect(0,0,pixelWidth,pixelHeight);
+    ctx.save();
+    ctx.beginPath();
+    frag.points.forEach((point,index)=>{
+      const x = point.x*scaleX;
+      const y = point.y*scaleY;
+      if(index===0) ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(
+      cleanSource.canvas,
+      frag.sourceX,frag.sourceY,frag.sourceW,frag.sourceH,
+      0,0,pixelWidth,pixelHeight
+    );
+    ctx.restore();
+  }).catch(()=>{
+    message.textContent = "The broken artwork could not be drawn. Please reset and try again.";
+  });
+}
+
 function preloadAllImages(){
   const all = [];
   objects.forEach(obj => obj.stages.forEach(file => all.push(file)));
+  VASE_ART_SHARDS.forEach(shard => all.push(shard.path));
 
   Promise.allSettled(all.map(file => findWorkingImage(file))).then(()=>{
     setObjectImage(true);
@@ -978,11 +1497,12 @@ function setObjectImage(forceMessage=false){
   const obj = currentObject();
   const imageIndex = getImageIndexForStage(obj);
   const filename = obj.stages[imageIndex];
+  const displayKey = obj.id === "vase" ? filename : `${filename}#damage-${stage}`;
 
   itemName.textContent = obj.name;
   fallback.textContent = obj.label.toUpperCase();
 
-  if(currentVisibleFilename === filename && imageLayers[activeLayerIndex].classList.contains("visible")){
+  if(currentVisibleFilename === displayKey && imageLayers[activeLayerIndex].classList.contains("visible")){
     if(forceMessage && fragments.length === 0){
       message.textContent = `Ready: ${obj.name}. Tap it or press SMASH.`;
     }
@@ -991,7 +1511,7 @@ function setObjectImage(forceMessage=false){
 
   const token = ++imageSwapToken;
 
-  function finishSwap(path){
+  function finishSwap(path,directSource=false){
     if(token !== imageSwapToken) return;
 
     const nextLayerIndex = activeLayerIndex === 0 ? 1 : 0;
@@ -1006,7 +1526,7 @@ function setObjectImage(forceMessage=false){
       currentLayer.classList.remove("visible");
 
       activeLayerIndex = nextLayerIndex;
-      currentVisibleFilename = filename;
+      currentVisibleFilename = displayKey;
       currentVisiblePath = path;
 
       if(forceMessage && fragments.length === 0){
@@ -1014,11 +1534,22 @@ function setObjectImage(forceMessage=false){
       }
     };
 
-    nextLayer.src = imageUrl(path);
+    nextLayer.src = directSource ? path : imageUrl(path);
 
     if(nextLayer.complete && nextLayer.naturalWidth > 0){
       nextLayer.onload();
     }
+  }
+
+  if(obj.id !== "vase"){
+    loadSourceImage(filename).then(loaded=>{
+      finishSwap(renderDamageFrame(obj,stage,loaded.image),true);
+    }).catch(()=>{
+      fallback.style.display = "flex";
+      imageLayers.forEach(layer=>layer.classList.remove("visible"));
+      message.textContent = "The object artwork could not be loaded. Reset and try again.";
+    });
+    return;
   }
 
   if(assetCache[filename]){
@@ -1153,48 +1684,74 @@ function playNoise(duration,gainValue){
   source.stop(audioCtx.currentTime + duration + .02);
 }
 
+function resetObjectProgress(){
+  objectProgress = {};
+
+  objects.forEach(obj=>{
+    objectProgress[obj.id] = {
+      stage:0,
+      broken:false,
+      pieceCount:0
+    };
+  });
+}
+
+function progressForObject(obj){
+  if(!objectProgress[obj.id]){
+    objectProgress[obj.id] = {stage:0,broken:false,pieceCount:0};
+  }
+
+  return objectProgress[obj.id];
+}
+
 function renderButtons(){
   itemGrid.innerHTML = "";
 
   objects.forEach((obj,index)=>{
+    const progress = progressForObject(obj);
     const btn = document.createElement("button");
-    btn.className = "item-btn" + (index === selectedIndex ? " active" : "");
-    btn.innerHTML = `${obj.label}<span class="stage-count">${obj.stages.length} stage${obj.stages.length>1?"s":""}</span>`;
+    const activeClass = index === selectedIndex ? " active" : "";
+    const brokenClass = progress.broken ? " broken" : "";
+    let progressLabel = `${obj.maxHits} hits`;
 
-    btn.addEventListener("click",()=>{
-      selectedIndex = index;
-      resetForObject();
-      renderButtons();
-    });
+    if(progress.broken){
+      progressLabel = progress.pieceCount > 0
+        ? `${progress.pieceCount} pieces ready`
+        : "breaking…";
+    }else if(progress.stage > 0){
+      progressLabel = `${progress.stage} / ${obj.maxHits} hits`;
+    }
 
+    btn.className = "item-btn" + activeClass + brokenClass;
+    btn.innerHTML = `${obj.label}<span class="stage-count">${progressLabel}</span>`;
+
+    btn.addEventListener("click",()=>switchToObject(index));
     itemGrid.appendChild(btn);
   });
 }
 
 function getImageIndexForStage(obj){
-  if(obj.stages.length >= 3){
-    if(stage <= 1) return 0;
-    if(stage <= 3) return 1;
-    return 2;
-  }
-
-  if(obj.stages.length === 2){
-    if(stage <= 2) return 0;
-    return 1;
-  }
-
-  return 0;
+  return Math.min(stage,obj.stages.length-1);
 }
 
 function maxHitsForObject(obj){
-  return obj.stages.length >= 3 ? 5 : 4;
+  return obj.maxHits;
 }
 
-function resetForObject(){
-  stage = 0;
-  hits = 0;
-  fragments = [];
-  zCounter = 100;
+function switchToObject(index,forceMessage=true){
+  if(isBrokenTransition){
+    message.textContent = "Finishing this break. Choose the next item in a moment.";
+    return;
+  }
+
+  selectedIndex = index;
+  fragmentBuildToken++;
+
+  const obj = currentObject();
+  const progress = progressForObject(obj);
+
+  stage = progress.stage;
+  release = Math.round(stage/Math.max(1,obj.maxHits)*100);
   selectedPieceId = null;
   activeDrag = null;
   currentVisibleFilename = "";
@@ -1202,42 +1759,68 @@ function resetForObject(){
   imageSwapToken++;
   isBrokenTransition = false;
   lastSmashAt = 0;
+  lastImpactNormalized = {x:.5,y:.48};
 
-  fragmentLayer.innerHTML = "";
-  fragmentLayer.classList.remove("active");
+  document.querySelectorAll(".fragment.selected,.fragment.dragging").forEach(piece=>{
+    piece.classList.remove("selected","dragging");
+  });
 
-  itemWrap.style.pointerEvents = "auto";
-  itemEl.style.display = "flex";
+  fragmentLayer.classList.toggle("active",fragments.length > 0);
   itemEl.style.opacity = "1";
   itemEl.className = "item";
-  cracks.className = "cracks";
-  cracks.innerHTML = "";
-
   imageLayers.forEach(layer=>{
     layer.classList.remove("visible");
     layer.onload = null;
   });
 
-  setObjectImage(true);
+  if(progress.broken){
+    itemWrap.classList.remove("multi-smash-target");
+    itemWrap.style.pointerEvents = "none";
+    itemEl.style.display = "none";
+
+    if(forceMessage){
+      message.textContent = `${obj.name} is already broken. Its ${progress.pieceCount} pieces are still in your artwork.`;
+    }
+  }else{
+    itemWrap.classList.add("multi-smash-target");
+    itemWrap.style.pointerEvents = "auto";
+    itemEl.style.display = "flex";
+    setObjectImage(false);
+
+    if(forceMessage){
+      message.textContent = fragments.length > 0
+        ? `Ready: ${obj.name}. Your ${fragments.length} collected pieces will stay in the room.`
+        : `Ready: ${obj.name}. Tap it or press SMASH.`;
+    }
+  }
+
+  renderButtons();
   updateStats();
 }
 
 function fullReset(){
+  fragmentBuildToken++;
   score = 0;
   release = 0;
   hits = 0;
   stage = 0;
   fragments = [];
+  resetObjectProgress();
   savedCreations = [];
+  zCounter = 100;
   selectedPieceId = null;
   activeDrag = null;
+  isBrokenTransition = false;
+  damageFrameCache = {};
+
+  fragmentLayer.innerHTML = "";
+  fragmentLayer.classList.remove("active");
 
   galleryRow.innerHTML = "";
   galleryRow.appendChild(emptyGallery);
   emptyGallery.style.display = "block";
 
-  resetForObject();
-  renderButtons();
+  switchToObject(selectedIndex,false);
   message.textContent = "Fresh Smash House room. Choose an item.";
 }
 
@@ -1252,11 +1835,6 @@ function updateStats(){
 function smash(e){
   if(!started) startGame();
 
-  if(fragments.length > 0){
-    message.textContent = "Create Mode is active. Drag a piece to move it.";
-    return;
-  }
-
   const now = performance.now();
 
   if(now - lastSmashAt < SMASH_COOLDOWN_MS){
@@ -1266,14 +1844,22 @@ function smash(e){
   lastSmashAt = now;
 
   const obj = currentObject();
+  const progress = progressForObject(obj);
   const maxHits = maxHitsForObject(obj);
 
-  if(stage >= maxHits || isBrokenTransition) return;
+  if(progress.broken || stage >= maxHits){
+    message.textContent = `${obj.name} is already broken. Choose another item to add more pieces.`;
+    return;
+  }
+
+  if(isBrokenTransition) return;
 
   stage++;
+  progress.stage = stage;
+  progress.broken = stage >= maxHits;
   hits++;
   score += 10 + stage * 5;
-  release = Math.min(100, release + Math.ceil(100 / maxHits));
+  release = Math.round(stage/maxHits*100);
 
   itemEl.classList.remove("shake");
   void itemEl.offsetWidth;
@@ -1298,36 +1884,24 @@ function smash(e){
     isBrokenTransition = true;
     score += 35;
     release = 100;
-    setObjectImage(false);
-    message.textContent = "BREAKTHROUGH! Now create with the fragments.";
-    itemEl.classList.add("breaking");
-    setTimeout(createFragments,380);
+    message.textContent = `BREAKTHROUGH! ${obj.name} pieces are joining your artwork.`;
+    const transitionToken = fragmentBuildToken;
+
+    setTimeout(()=>{
+      if(transitionToken !== fragmentBuildToken || currentObject() !== obj) return;
+      itemEl.classList.add("breaking");
+    },140);
+
+    setTimeout(()=>{
+      if(transitionToken !== fragmentBuildToken || currentObject() !== obj) return;
+      createFragments();
+    },540);
   }
 
+  renderButtons();
   updateStats();
 }
-
 function makeCracks(level){
-  const crackLines = [
-    "M50 50 L61 36 L58 20",
-    "M50 50 L38 39 L27 26",
-    "M50 50 L49 67 L39 83",
-    "M50 50 L68 58 L84 55",
-    "M61 36 L75 29 L86 17",
-    "M38 39 L24 48 L12 43",
-    "M49 67 L59 80 L56 96",
-    "M68 58 L80 74 L94 79",
-    "M50 50 L52 20 L48 6",
-    "M50 50 L22 62 L8 75"
-  ];
-
-  const use = crackLines.slice(0,Math.min(crackLines.length,level*2));
-
-  cracks.className = "cracks show";
-  cracks.innerHTML = `
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-      ${use.map((d,i)=>`<path d="${d}" style="opacity:${i<4?".92":".62"};stroke-width:${i<4?"4.5":"2.5"}"></path>`).join("")}
-    </svg>`;
 }
 
 function eventClientPoint(e){
@@ -1368,7 +1942,21 @@ function itemPoint(e){
 function makeImpact(e){
   const point = eventClientPoint(e);
   const p = roomCoords(point.clientX,point.clientY);
+  const itemRect = itemWrap.getBoundingClientRect();
   const el = document.createElement("div");
+
+  if(
+    Number.isFinite(point.clientX) && Number.isFinite(point.clientY) &&
+    point.clientX >= itemRect.left && point.clientX <= itemRect.right &&
+    point.clientY >= itemRect.top && point.clientY <= itemRect.bottom
+  ){
+    lastImpactNormalized = {
+      x:clamp((point.clientX-itemRect.left)/Math.max(1,itemRect.width),0,1),
+      y:clamp((point.clientY-itemRect.top)/Math.max(1,itemRect.height),0,1)
+    };
+  }else{
+    lastImpactNormalized = {x:.5,y:.48};
+  }
 
   el.className = "impact";
   el.style.left = p.x + "px";
@@ -1401,74 +1989,208 @@ function makeChips(e,amount){
   }
 }
 
-function createFragments(){
+async function createFragments(){
+  const buildToken = ++fragmentBuildToken;
   const obj = currentObject();
+  const progress = progressForObject(obj);
   const rect = room.getBoundingClientRect();
-  const itemRect = itemEl.getBoundingClientRect();
-  const centerX = itemRect.left - rect.left + itemRect.width/2;
-  const centerY = itemRect.top - rect.top + itemRect.height/2;
+  const sourceFilename = obj.stages[0];
+  let loaded;
 
+  message.textContent = "Collecting the broken artwork pieces…";
+  try{
+    loaded = await loadSourceImage(sourceFilename);
+  }catch(error){
+    progress.stage = Math.max(0,obj.maxHits-1);
+    progress.broken = false;
+    stage = progress.stage;
+    release = Math.round(stage/Math.max(1,obj.maxHits)*100);
+    isBrokenTransition = false;
+    switchToObject(selectedIndex,false);
+    message.textContent = "The pieces could not be prepared. Try the final hit again.";
+    return;
+  }
+  if(buildToken !== fragmentBuildToken) return;
+
+  const metrics = sourceDisplayMetrics(loaded.image);
+  const sourceWidth = loaded.image.naturalWidth;
+  const sourceHeight = loaded.image.naturalHeight;
+  let shardDefinitions;
+
+  if(obj.id === "vase"){
+    shardDefinitions = VASE_ART_SHARDS.map(shard=>({
+      shardPath:shard.path,
+      sourceX:shard.sourceX,
+      sourceY:shard.sourceY,
+      sourceW:shard.sourceW,
+      sourceH:shard.sourceH,
+      visibleArea:shard.visibleArea,
+      points:[],
+      poly:"art-only"
+    }));
+  }else{
+    const region = obj.shardRegion || {x:0,y:0,w:1,h:1};
+    const regionX = sourceWidth*region.x;
+    const regionY = sourceHeight*region.y;
+    const regionWidth = sourceWidth*region.w;
+    const regionHeight = sourceHeight*region.h;
+    const regionImpact = {
+      x:(lastImpactNormalized.x-region.x)/region.w,
+      y:(lastImpactNormalized.y-region.y)/region.h
+    };
+    shardDefinitions = makeImpactFracture(
+      regionWidth,
+      regionHeight,
+      USABLE_SHARD_COUNT,
+      regionImpact
+    ).map(sourcePolygon=>{
+      const shifted = sourcePolygon.map(point=>({
+        x:point.x+regionX,
+        y:point.y+regionY
+      }));
+      const bounds = polygonBounds(shifted);
+      const localPoints = shifted.map(point=>({
+        x:point.x-bounds.minX,
+        y:point.y-bounds.minY
+      }));
+      return {
+        shardPath:"",
+        sourceX:bounds.minX,
+        sourceY:bounds.minY,
+        sourceW:bounds.width,
+        sourceH:bounds.height,
+        points:localPoints,
+        poly:pointsToCss(localPoints,bounds.width,bounds.height)
+      };
+    });
+    shardDefinitions = tightenDynamicShards(
+      shardDefinitions,
+      cleanSourceArtwork(sourceFilename,loaded.image)
+    );
+  }
+  const fragmentEpoch = Date.now();
+  const centerX = metrics.left + metrics.width/2;
+  const centerY = metrics.top + metrics.height/2;
+  const existingPieceCount = fragments.length;
+
+  itemWrap.classList.remove("multi-smash-target");
   itemWrap.style.pointerEvents = "none";
   itemEl.style.display = "none";
-  fragmentLayer.innerHTML = "";
   fragmentLayer.classList.add("active");
 
-  fragments = [];
-  zCounter = 100;
   selectedPieceId = null;
   activeDrag = null;
   isBrokenTransition = false;
 
-  const count = obj.material === "glass" ? 46 : obj.material === "paper" ? 32 : 38;
+  shardDefinitions.forEach((definition,i)=>{
+    const displayMultiplier = definition.visibleArea ? SHARD_DISPLAY_MULTIPLIER : 1;
+    let visualWidth = Math.max(2,definition.sourceW*metrics.scale*displayMultiplier);
+    let visualHeight = Math.max(2,definition.sourceH*metrics.scale*displayMultiplier);
 
-  for(let i=0;i<count;i++){
-    const angle = Math.PI*2*(i/count) + rand(-.45,.45);
-    const dist = rand(35,Math.min(rect.width,rect.height)*.34);
-    const big = i < 10;
+    if(definition.visibleArea){
+      const visibleRoot = Math.sqrt(definition.visibleArea)*metrics.scale*displayMultiplier;
+      const visibleBoost = visibleRoot < MIN_VISIBLE_ART_ROOT
+        ? MIN_VISIBLE_ART_ROOT/Math.max(1,visibleRoot)
+        : 1;
+      visualWidth *= visibleBoost;
+      visualHeight *= visibleBoost;
+
+      const largestSide = Math.max(visualWidth,visualHeight);
+      if(largestSide > MAX_VISIBLE_SHARD_SIZE){
+        const fitScale = MAX_VISIBLE_SHARD_SIZE/largestSide;
+        visualWidth *= fitScale;
+        visualHeight *= fitScale;
+      }
+    }
+    const angle = Math.PI*2*(i/shardDefinitions.length) + rand(-.34,.34);
+    const distance = rand(
+      Math.min(rect.width,rect.height)*.13,
+      Math.min(rect.width,rect.height)*.38
+    );
+    const minX = Math.min(rect.width/2,visualWidth/2+7);
+    const maxX = Math.max(minX,rect.width-visualWidth/2-7);
+    const minY = Math.min(rect.height/2,visualHeight/2+7);
+    const maxY = Math.max(minY,rect.height-visualHeight/2-28);
 
     const frag = {
-      id:"frag_" + Date.now() + "_" + i,
-      x:clamp(centerX + Math.cos(angle)*dist + rand(-18,18),18,rect.width-30),
-      y:clamp(centerY + Math.sin(angle)*dist + rand(-18,18),18,rect.height-42),
-      w:big ? rand(52,90) : rand(38,60),
-      h:big ? rand(40,82) : rand(38,60),
+      id:"frag_" + obj.id + "_" + fragmentEpoch + "_" + i,
+      x:clamp(centerX + Math.cos(angle)*distance + rand(-16,16),minX,maxX),
+      y:clamp(centerY + Math.sin(angle)*distance + rand(-16,16),minY,maxY),
+      w:visualWidth,
+      h:visualHeight,
       rot:rand(-180,180),
-      color:pick(obj.colors),
-      poly:randomPoly(),
+      poly:definition.poly,
+      points:definition.points,
+      shardPath:definition.shardPath,
+      artOnly:Boolean(definition.shardPath),
+      sourceArtworkId:obj.id,
+      sourceFilename,
+      sourcePath:loaded.path,
+      sourceNaturalW:sourceWidth,
+      sourceNaturalH:sourceHeight,
+      sourceX:definition.sourceX,
+      sourceY:definition.sourceY,
+      sourceW:definition.sourceW,
+      sourceH:definition.sourceH,
+      visibleArea:definition.visibleArea || 0,
       material:obj.material,
-      z:i+10
+      z:++zCounter
     };
 
     fragments.push(frag);
     drawFragment(frag,fragmentLayer);
-  }
+  });
 
+  progress.broken = true;
+  progress.pieceCount += fragments.length-existingPieceCount;
+  renderButtons();
   updateStats();
-  message.textContent = "Create Mode unlocked. Drag any piece to move it.";
+  message.textContent = `${obj.name} added ${progress.pieceCount} pieces. Choose another item to keep building, or arrange the ${fragments.length} collected pieces.`;
 }
 
-function drawFragment(frag,parent,scale=1){
+function drawFragment(frag,parent,scale=1,interactive=parent===fragmentLayer){
   const el = document.createElement("div");
+  const artwork = document.createElement(frag.shardPath ? "img" : "canvas");
+  const visualWidth = Math.max(1,frag.w*scale);
+  const visualHeight = Math.max(1,frag.h*scale);
+  const hitWidth = interactive ? Math.max(MIN_SHARD_HIT_SIZE,visualWidth) : visualWidth;
+  const hitHeight = interactive ? Math.max(MIN_SHARD_HIT_SIZE,visualHeight) : visualHeight;
 
-  el.className = "fragment" + (frag.material === "glass" ? " glass" : "");
+  el.className = "fragment";
   el.dataset.id = frag.id;
+  el.dataset.sourceArtwork = frag.sourceArtworkId || "";
   el.style.left = (frag.x*scale) + "px";
   el.style.top = (frag.y*scale) + "px";
-  el.style.width = Math.max(38,frag.w*scale) + "px";
-  el.style.height = Math.max(38,frag.h*scale) + "px";
-  el.style.background = frag.color;
-  el.style.setProperty("--poly",frag.poly);
+  el.style.width = hitWidth + "px";
+  el.style.height = hitHeight + "px";
   el.style.zIndex = frag.z;
   el.style.transform = `translate(-50%,-50%) rotate(${frag.rot}deg)`;
 
-  if(parent === fragmentLayer){
-    el.addEventListener("pointerdown",piecePointerDown,{passive:false});
-    el.addEventListener("mousedown",pieceMouseDown);
-    el.addEventListener("touchstart",pieceTouchStart,{passive:false});
+  artwork.className = frag.shardPath ? "fragment-art" : "fragment-canvas";
+  artwork.style.width = visualWidth + "px";
+  artwork.style.height = visualHeight + "px";
+  artwork.setAttribute("aria-hidden","true");
+  if(frag.shardPath){
+    artwork.src = imageUrl(frag.shardPath);
+    artwork.alt = "";
+    artwork.draggable = false;
+  }
+  el.appendChild(artwork);
+
+  if(interactive){
+    if(window.PointerEvent){
+      el.addEventListener("pointerdown",piecePointerDown,{passive:false});
+    }else{
+      el.addEventListener("mousedown",pieceMouseDown);
+      el.addEventListener("touchstart",pieceTouchStart,{passive:false});
+    }
     el.addEventListener("dblclick",pieceDoubleClick);
   }
 
   parent.appendChild(el);
+  if(!frag.shardPath){
+    paintShard(artwork,frag,visualWidth,visualHeight);
+  }
   return el;
 }
 
@@ -1650,22 +2372,96 @@ function autoArt(){
   }
 
   const rect = room.getBoundingClientRect();
-  const cx = rect.width/2;
-  const cy = rect.height*.47;
-  const maxR = Math.min(rect.width,rect.height)*.28;
+  const insetX = 14;
+  const insetTop = 14;
+  const insetBottom = 42;
+  const gap = 8;
+  const arranged = [...fragments].sort((a,b)=>(b.w*b.h)-(a.w*a.h));
+  const minimumCols = rect.width < 540 ? 4 : 5;
+  const maximumCols = rect.width < 540 ? 8 : 12;
+  const usableWidth = Math.max(1,rect.width-insetX*2);
+  const usableHeight = Math.max(1,rect.height-insetTop-insetBottom);
+  const balancedCols = arranged.length <= 20
+    ? minimumCols
+    : Math.ceil(Math.sqrt(arranged.length*usableWidth/usableHeight));
+  const cols = Math.min(
+    arranged.length,
+    clamp(balancedCols,minimumCols,maximumCols)
+  );
+  const rows = Math.ceil(arranged.length/cols);
+  const cellW = Math.max(1,usableWidth/cols);
+  const cellH = Math.max(1,usableHeight/rows);
+  const relaxationSteps = arranged.length > 120
+    ? 26
+    : arranged.length > 80
+      ? 38
+      : arranged.length > 40
+        ? 60
+        : 120;
+  const targetPullSteps = Math.min(40,Math.ceil(relaxationSteps/3));
 
   activeDrag = null;
   selectedPieceId = null;
 
-  fragments.forEach((frag,i)=>{
-    const ring = i % 3;
-    const angle = i * .72;
-    const r = maxR * (.25 + ring*.22) + rand(-8,8);
+  arranged.forEach((frag,i)=>{
+    const row = Math.floor(i/cols);
+    const countInRow = Math.min(cols,arranged.length-row*cols);
+    let col = i%cols;
+    if(row%2) col = countInRow-1-col;
+    const rowStart = (rect.width-countInRow*cellW)/2;
+    frag.autoTargetX = rowStart+(col+.5)*cellW;
+    frag.autoTargetY = insetTop+(row+.5)*cellH;
+    frag.x = frag.autoTargetX+rand(-cellW*.05,cellW*.05);
+    frag.y = frag.autoTargetY+rand(-cellH*.05,cellH*.05);
+    frag.rot = ((i%5)-2)*7+rand(-4,4);
+    frag.z = 20+i;
+  });
 
-    frag.x = cx + Math.cos(angle)*r;
-    frag.y = cy + Math.sin(angle)*r*.72;
-    frag.rot = angle * 57.29 + rand(-38,38);
-    frag.z = 20 + i;
+  for(let iteration=0;iteration<relaxationSteps;iteration++){
+    if(iteration < targetPullSteps){
+      arranged.forEach(frag=>{
+        frag.x += (frag.autoTargetX-frag.x)*.025;
+        frag.y += (frag.autoTargetY-frag.y)*.025;
+      });
+    }
+
+    for(let i=0;i<arranged.length;i++){
+      for(let j=i+1;j<arranged.length;j++){
+        const a = arranged[i];
+        const b = arranged[j];
+        const dx = b.x-a.x;
+        const dy = b.y-a.y;
+        const overlapX = (a.w+b.w)/2+gap-Math.abs(dx);
+        const overlapY = (a.h+b.h)/2+gap-Math.abs(dy);
+        if(overlapX <= 0 || overlapY <= 0) continue;
+
+        if(overlapX < overlapY){
+          const direction = Math.sign(dx) || (i<j ? 1 : -1);
+          const push = overlapX/2+.25;
+          a.x -= direction*push;
+          b.x += direction*push;
+        }else{
+          const direction = Math.sign(dy) || (i<j ? 1 : -1);
+          const push = overlapY/2+.25;
+          a.y -= direction*push;
+          b.y += direction*push;
+        }
+      }
+    }
+
+    arranged.forEach(frag=>{
+      const minX = Math.min(rect.width/2,frag.w/2+insetX);
+      const maxX = Math.max(minX,rect.width-frag.w/2-insetX);
+      const minY = Math.min(rect.height/2,frag.h/2+insetTop);
+      const maxY = Math.max(minY,rect.height-frag.h/2-insetBottom);
+      frag.x = clamp(frag.x,minX,maxX);
+      frag.y = clamp(frag.y,minY,maxY);
+    });
+  }
+
+  arranged.forEach((frag,i)=>{
+    delete frag.autoTargetX;
+    delete frag.autoTargetY;
 
     const el = getPieceElement(frag.id);
 
@@ -1678,7 +2474,8 @@ function autoArt(){
     }
   });
 
-  message.textContent = "Auto Art arranged a starter design. You can still drag every piece.";
+  const objectCount = new Set(fragments.map(frag=>frag.sourceArtworkId)).size;
+  message.textContent = `Auto Art spread all ${fragments.length} pieces from ${objectCount} smashed object${objectCount === 1 ? "" : "s"}. You can still move every piece.`;
   playSaveSound();
 }
 
@@ -1689,9 +2486,17 @@ function saveCreation(){
   }
 
   const rect = room.getBoundingClientRect();
+  const artworkIds = [...new Set(fragments.map(frag=>frag.sourceArtworkId).filter(Boolean))];
+  const artworkNames = artworkIds.map(id=>objects.find(obj=>obj.id === id)?.name || id);
+  const creationTitle = artworkNames.length === 1
+    ? artworkNames[0] + " Creation"
+    : artworkNames.length <= 3
+      ? artworkNames.join(" + ") + " Creation"
+      : `Mixed Smash Creation • ${artworkNames.length} objects`;
 
   savedCreations.push({
-    title:currentObject().name + " Creation",
+    title:creationTitle,
+    artworkIds,
     roomW:rect.width,
     roomH:rect.height,
     fragments:JSON.parse(JSON.stringify(fragments))
@@ -1723,20 +2528,14 @@ function renderGallery(){
     const sy = 72 / creation.roomH;
     const scale = Math.min(sx,sy);
 
-    creation.fragments.slice(-34).forEach((frag,j)=>{
-      const el = document.createElement("div");
-
-      el.className = "thumb-piece";
-      el.style.left = frag.x * sx + "px";
-      el.style.top = frag.y * sy + "px";
-      el.style.width = Math.max(4,frag.w*scale) + "px";
-      el.style.height = Math.max(4,frag.h*scale) + "px";
-      el.style.background = frag.color;
-      el.style.setProperty("--poly",frag.poly);
-      el.style.transform = `translate(-50%,-50%) rotate(${frag.rot}deg)`;
-      el.style.zIndex = j;
-
-      thumb.appendChild(el);
+    creation.fragments.forEach((frag,j)=>{
+      const copy = JSON.parse(JSON.stringify(frag));
+      copy.x = frag.x * sx;
+      copy.y = frag.y * sy;
+      copy.w = frag.w * scale;
+      copy.h = frag.h * scale;
+      copy.z = j;
+      drawFragment(copy,thumb,1,false);
     });
 
     galleryRow.appendChild(thumb);
@@ -1767,17 +2566,6 @@ function openCreation(index){
   },20);
 }
 
-function randomPoly(){
-  return pick([
-    "8% 24%,48% 3%,96% 20%,82% 92%,20% 78%",
-    "15% 5%,94% 26%,72% 96%,4% 72%",
-    "4% 18%,58% 8%,98% 56%,42% 96%,9% 70%",
-    "28% 4%,93% 15%,87% 76%,51% 96%,5% 62%",
-    "10% 8%,76% 3%,96% 45%,75% 94%,15% 82%,2% 39%",
-    "35% 2%,96% 35%,83% 88%,28% 98%,2% 48%"
-  ]);
-}
-
 function pick(arr){
   return arr[Math.floor(Math.random()*arr.length)];
 }
@@ -1791,7 +2579,6 @@ function clamp(v,min,max){
 }
 
 itemEl.addEventListener("pointerdown",(e)=>{
-  if(fragments.length > 0) return;
   e.preventDefault();
   smash(e);
 },{passive:false});
@@ -1816,29 +2603,31 @@ modal.addEventListener("pointerdown",(e)=>{
   }
 });
 
-window.addEventListener("pointermove",windowPointerMove,{passive:false});
-window.addEventListener("pointerup",endActiveDrag,{passive:false});
-window.addEventListener("pointercancel",endActiveDrag,{passive:false});
-
-window.addEventListener("mousemove",windowMouseMove,{passive:false});
-window.addEventListener("mouseup",endActiveDrag,{passive:false});
-
-window.addEventListener("touchmove",windowTouchMove,{passive:false});
-window.addEventListener("touchend",endActiveDrag,{passive:false});
-window.addEventListener("touchcancel",endActiveDrag,{passive:false});
+if(window.PointerEvent){
+  window.addEventListener("pointermove",windowPointerMove,{passive:false});
+  window.addEventListener("pointerup",endActiveDrag,{passive:false});
+  window.addEventListener("pointercancel",endActiveDrag,{passive:false});
+}else{
+  window.addEventListener("mousemove",windowMouseMove,{passive:false});
+  window.addEventListener("mouseup",endActiveDrag,{passive:false});
+  window.addEventListener("touchmove",windowTouchMove,{passive:false});
+  window.addEventListener("touchend",endActiveDrag,{passive:false});
+  window.addEventListener("touchcancel",endActiveDrag,{passive:false});
+}
 
 document.addEventListener("gesturestart",(e)=>e.preventDefault());
 
 document.addEventListener("touchmove",(e)=>{
   if(e.target.closest(".gallery-row")) return;
-  if(activeDrag) return;
-  if(fragments.length > 0) return;
-  e.preventDefault();
+  if(e.target.closest(".room")){
+    e.preventDefault();
+  }
 },{passive:false});
 
+resetObjectProgress();
 renderButtons();
 preloadAllImages();
-resetForObject();
+switchToObject(selectedIndex,true);
 updateStats();
 </script>
 </body>

@@ -1,0 +1,73 @@
+SMASH HOUSE — MULTI-OBJECT ART TEST REPORT
+Date: August 9, 2026
+
+ROOT CAUSE
+- Object selection called the same reset path used to clear a game session.
+- That path emptied the fragment array and fragment layer every time a different
+  object button was chosen.
+- Smash input was also blocked whenever any fragments existed, so Create Mode
+  prevented a second object from being broken.
+- Fragment creation replaced the prior set instead of appending a new set.
+
+IMPLEMENTED FIX
+- Added separate progress for every breakable object.
+- Object selection now changes only the active target. It does not clear pieces,
+  score, total hits, saved artwork, or the other objects' damage progress.
+- Removed the Create Mode block that prevented smashing with existing pieces.
+- New fragments append to the shared session and receive unique object-based IDs
+  and layer values.
+- Broken-item buttons show the actual number of pieces contributed.
+- Partially damaged objects remember their exact hit count when revisited.
+- The active unbroken target is raised above collected pieces for reliable mouse
+  and phone tapping; collected pieces outside the target remain interactive.
+- Auto Art now chooses a balanced grid for 21 to 180 pieces and reduces collision
+  iterations for large collections so mixed-object layouts remain responsive.
+- Mission Gallery names and saves mixed-object creations with the full shared
+  fragment collection.
+- Full RESET clears all object progress and fragments; no other action does.
+- Added a new asset version so the previous single-object code cannot be reused
+  from browser cache.
+
+VALIDATION COMPLETED
+- JavaScript syntax passed.
+- Runtime session test passed for Vase, Mug, and Camera:
+  • Vase break created 20 pieces.
+  • Selecting Mug retained the 20 Vase pieces.
+  • Partial Mug damage survived switching to Camera and back.
+  • Mug break increased the retained collection from 20 to 40 pieces.
+  • Partial Camera damage survived switching away and back.
+  • Camera break increased the collection from 40 to 60 pieces.
+  • Auto Art arranged all 60 mixed pieces across the room.
+  • Mission Gallery saved all 60 pieces under a mixed-object title.
+  • RESET cleared pieces, per-object progress, total hits, and gallery entries.
+- Layout simulation passed for 20, 40, 60, 100, and 180 pieces on desktop and
+  phone room sizes with finite, bounded coordinates.
+- All three exact One Home participation bridge markers remain present once.
+- Exactly 20 Vase piece references and six Vase damage-state references remain.
+- All 20 approved Vase piece file hashes are unchanged.
+- Defective opaque damage pictures and the white fracture-line element remain
+  absent.
+
+REQUIRED LIVE ACCEPTANCE TEST
+1. Vase: five hits and exactly 20 approved pieces.
+2. Select Mug: all Vase pieces must remain visible.
+3. Hit Mug twice, switch away, return: Mug must still show two hits.
+4. Finish Mug: Mug pieces must join the Vase pieces without removing anything.
+5. Break Camera and Blue Mug: every new set must join the same room.
+6. Auto Art: every mixed piece must remain present and spread through the room.
+7. Drag and rotate pieces from each smashed object.
+8. Save and reopen the mixed result in Mission Gallery.
+9. Repeat on a physical phone.
+10. Confirm RESET is the only action that clears the complete session.
+
+UNCHANGED SCOPE
+- No piece-resizing control was added.
+- No reconstruction, snap-back, or jigsaw behavior was added.
+- One Home authentication, Passport, Welcome rewards, Participation Tickets,
+  one-ticket-per-day logic, Rollies Arcade, Founder Supply Drop, Creator, Mint,
+  navigation, database rules, and unrelated systems were not changed.
+
+PRODUCTION GATE
+- A live desktop and physical-phone test is still required.
+- The current One Home participation validator must be checked with this shared
+  multi-object fragment session before replacing production.
