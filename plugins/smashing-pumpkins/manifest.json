@@ -1,0 +1,12 @@
+{
+  "id": "smashing-pumpkins",
+  "name": "Smashing Pumpkins Factory",
+  "version": "0.1.0-dev",
+  "host": "smash-house",
+  "entry": "./index.html",
+  "participation": {
+    "mode": "host-managed",
+    "awardsEnabled": false
+  },
+  "release": "development-only"
+}
